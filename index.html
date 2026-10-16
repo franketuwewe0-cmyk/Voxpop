@@ -24,6 +24,7 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .password-wrapper { position: relative; margin-bottom: 15px; }
 .password-wrapper input { margin-bottom: 0 !important; padding-right: 50px; }
 .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; opacity: 0.7; }
+.forgot-link { text-align: right; font-size: 12px; color: #87CEEB; cursor: pointer; margin-top: -8px; margin-bottom: 15px; }
 .avatar-section { margin-bottom: 20px; }
 .avatar-section-title { font-size: 12px; color: #888888; margin-bottom: 10px; text-align: center; }
 .avatar-preview { width: 80px; height: 80px; margin: 0 auto 15px auto; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; }
@@ -49,6 +50,9 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .empty-btn { background-color: #87CEEB; color: #1a1a2e; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 13px; cursor: pointer; }
 .poll-card { background-color: #16213e; width: 100%; border-radius: 15px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); border: 1px solid #2a2a4a; box-sizing: border-box; margin-bottom: 20px; }
 .poll-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; }
+.poll-author { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.poll-author:hover .username { text-decoration: underline; }
+.author-avatar-mini { width: 26px; height: 26px; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .username { font-weight: bold; color: #e94560; }
 .timestamp { color: #888888; }
 .poll-question { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
@@ -170,8 +174,6 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .loading-overlay.show { display: flex; }
 .spinner { width: 40px; height: 40px; border: 4px solid #2a2a4a; border-top-color: #87CEEB; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* SHARE MODAL */
 .share-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
 .share-modal-overlay.open { display: flex; }
 .share-modal { background-color: #16213e; width: 100%; max-width: 400px; border-radius: 20px 20px 0 0; padding: 25px 20px 30px; box-sizing: border-box; border-top: 1px solid #2a2a4a; animation: slideUp 0.25s ease; }
@@ -179,12 +181,14 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .share-modal-handle { width: 40px; height: 4px; background-color: #2a2a4a; border-radius: 3px; margin: 0 auto 20px auto; }
 .share-modal-title { font-size: 16px; font-weight: bold; margin-bottom: 20px; text-align: center; }
 .share-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
-.share-option { display: flex; flex-direction: column; align-items: center; gap: 6px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px 5px; cursor: pointer; transition: all 0.2s; }
+.share-option { display: flex; flex-direction: column; align-items: center; gap: 6px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px 5px; cursor: pointer; }
 .share-option:hover { border-color: #87CEEB; background-color: #2a2a4a; }
 .share-option-icon { font-size: 24px; }
 .share-option-label { font-size: 10px; font-weight: bold; color: #cccccc; }
 .share-tip { font-size: 11px; color: #888888; text-align: center; margin-bottom: 15px; line-height: 1.4; background-color: #1a1a2e; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a2a4a; }
 .share-cancel-btn { width: 100%; padding: 14px; background-color: transparent; border: 1px solid #2a2a4a; color: #888888; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; }
+.follow-btn { background-color: #87CEEB; color: #1a1a2e; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 15px; }
+.follow-btn.following { background-color: transparent; border: 1px solid #87CEEB; color: #87CEEB; }
 </style>
 </head>
 <body>
@@ -201,22 +205,10 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
     <div class="share-modal-handle"></div>
     <div class="share-modal-title">Share this poll 🔗</div>
     <div class="share-options">
-      <div class="share-option" onclick="shareVia('copy')">
-        <div class="share-option-icon">📋</div>
-        <div class="share-option-label">Copy</div>
-      </div>
-      <div class="share-option" onclick="shareVia('whatsapp')">
-        <div class="share-option-icon">💬</div>
-        <div class="share-option-label">WhatsApp</div>
-      </div>
-      <div class="share-option" onclick="shareVia('twitter')">
-        <div class="share-option-icon">🐦</div>
-        <div class="share-option-label">Twitter</div>
-      </div>
-      <div class="share-option" onclick="shareVia('native')">
-        <div class="share-option-icon">📱</div>
-        <div class="share-option-label">More</div>
-      </div>
+      <div class="share-option" onclick="shareVia('copy')"><div class="share-option-icon">📋</div><div class="share-option-label">Copy</div></div>
+      <div class="share-option" onclick="shareVia('whatsapp')"><div class="share-option-icon">💬</div><div class="share-option-label">WhatsApp</div></div>
+      <div class="share-option" onclick="shareVia('twitter')"><div class="share-option-icon">🐦</div><div class="share-option-label">Twitter</div></div>
+      <div class="share-option" onclick="shareVia('native')"><div class="share-option-icon">📱</div><div class="share-option-label">More</div></div>
     </div>
     <div class="share-tip">💡 Copy the link and paste it in any VoxPop chat to share it with friends.</div>
     <button class="share-cancel-btn" onclick="closeShareModal()">Cancel</button>
@@ -239,6 +231,7 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
       <input type="password" id="loginPassword" placeholder="••••••••">
       <span class="toggle-password" onclick="togglePwd('loginPassword', this)">👁️</span>
     </div>
+    <div class="forgot-link" onclick="handleForgotPassword()">Forgot password?</div>
     <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Login</button>
   </div>
   <div class="auth-form hidden" id="signupForm">
@@ -299,6 +292,38 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
     </div>
   </div>
 
+  <!-- VIEW ANOTHER USER'S PROFILE -->
+  <div class="overlay-screen" id="viewProfileScreen">
+    <div class="overlay-header">
+      <button class="back-btn" onclick="closeViewProfile()">←</button>
+      <div class="overlay-title">Profile</div>
+    </div>
+    <div class="profile-content">
+      <div class="profile-header">
+        <div class="avatar" id="viewAvatar">🦊</div>
+        <h2 class="profile-name" id="viewName">Loading...</h2>
+        <p class="profile-handle" id="viewHandle"></p>
+        <p class="profile-bio" id="viewBio"></p>
+        <p class="profile-joined" id="viewJoined"></p>
+        <button class="follow-btn" id="followBtn" onclick="toggleFollow()">Follow</button>
+      </div>
+      <div class="level-bar-container">
+        <div class="level-header">
+          <span class="level-title" id="viewLevelTitle">Level 1</span>
+          <span class="xp-text" id="viewXpText"></span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="viewXpFill" style="width:0%"></div></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><strong id="viewStatPolls">0</strong><span>Polls</span></div>
+        <div class="stat-box"><strong id="viewStatVotes">0</strong><span>Votes</span></div>
+        <div class="stat-box"><strong id="viewStatFollowers">0</strong><span>Followers</span></div>
+      </div>
+      <div class="section-title">Public Polls</div>
+      <div id="viewPollsList"></div>
+    </div>
+  </div>
+
   <div class="overlay-screen" id="profileScreen">
     <div class="overlay-header">
       <button class="back-btn" onclick="closeProfile()">←</button>
@@ -335,25 +360,14 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
       <div class="overlay-title">Create a Poll</div>
     </div>
     <div class="create-content">
-      <div class="form-group">
-        <label>Your Question</label>
-        <input type="text" id="newQuestion" placeholder="e.g., Who should be next SUG President?">
-      </div>
+      <div class="form-group"><label>Your Question</label><input type="text" id="newQuestion" placeholder="e.g., Who should be next SUG President?"></div>
       <div id="optionsContainer"></div>
       <button class="add-option-btn" id="addOptionBtn" onclick="addOptionField()">➕ Add another option</button>
       <div class="form-group">
         <label>Who can see this?</label>
         <div class="visibility-row">
-          <div class="visibility-btn active" id="visPublic" onclick="setVisibility('public')">
-            <span class="v-icon">🌐</span>
-            <span class="v-label">Public</span>
-            <span class="v-desc">Everyone on Explore</span>
-          </div>
-          <div class="visibility-btn" id="visPrivate" onclick="setVisibility('private')">
-            <span class="v-icon">🔒</span>
-            <span class="v-label">Private</span>
-            <span class="v-desc">Only on your Home</span>
-          </div>
+          <div class="visibility-btn active" id="visPublic" onclick="setVisibility('public')"><span class="v-icon">🌐</span><span class="v-label">Public</span><span class="v-desc">Everyone on Explore</span></div>
+          <div class="visibility-btn" id="visPrivate" onclick="setVisibility('private')"><span class="v-icon">🔒</span><span class="v-label">Private</span><span class="v-desc">Only on your Home</span></div>
         </div>
         <div class="visibility-hint" id="visibilityHint">🌐 Public polls appear on Explore so anyone can vote.</div>
       </div>
@@ -367,14 +381,8 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
           <option value="elections">🗳️ Elections</option>
         </select>
       </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Anonymous Voting</div><div class="setting-desc">Hide who voted for what</div></div>
-        <button class="toggle-btn" id="anonToggle" onclick="toggleSetting('anonToggle')">OFF</button>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Show Voters</div><div class="setting-desc">Display names of people who voted</div></div>
-        <button class="toggle-btn on" id="votersToggle" onclick="toggleSetting('votersToggle')">ON</button>
-      </div>
+      <div class="setting-row"><div class="setting-info"><div class="setting-label">Anonymous Voting</div><div class="setting-desc">Hide who voted for what</div></div><button class="toggle-btn" id="anonToggle" onclick="toggleSetting('anonToggle')">OFF</button></div>
+      <div class="setting-row"><div class="setting-info"><div class="setting-label">Show Voters</div><div class="setting-desc">Display names of people who voted</div></div><button class="toggle-btn on" id="votersToggle" onclick="toggleSetting('votersToggle')">ON</button></div>
       <button class="post-btn" id="postPollBtn" onclick="submitPoll()">Post Poll</button>
     </div>
   </div>
@@ -419,33 +427,14 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
     <div class="create-content">
       <div style="text-align:center; margin-bottom: 25px;">
         <div style="font-size: 50px; margin-bottom: 10px;">🗳️</div>
-        <div style="font-size: 26px; font-weight: bold; color: #87CEEB; letter-spacing: 0.5px;">VoxPop</div>
+        <div style="font-size: 26px; font-weight: bold; color: #87CEEB;">VoxPop</div>
         <div style="font-size: 11px; color: #888888; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;">Voice of the People</div>
         <div style="font-size: 11px; color: #555555; margin-top: 10px;">Version 1.0.0</div>
       </div>
-      <div class="faq-item">
-        <div class="faq-q">📖 What is VoxPop?</div>
-        <div class="faq-a">VoxPop is a social polling app that gives everyone a stage to be heard. Create polls about anything, vote on what matters, and chat with others who care about the same things.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">🎯 Why VoxPop?</div>
-        <div class="faq-a">Because decisions should be fun, fast, and inclusive. Whether it's a friendly debate, a community vote, or just figuring out where to eat — VoxPop makes every voice count.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">✨ What's inside?</div>
-        <div class="faq-a">
-          🌐 Public & Private Polls<br>
-          🖼️ Image-based voting<br>
-          💬 Real-time chats on every poll<br>
-          ⭐ XP & Level system<br>
-          🔒 Anonymous voting option<br>
-          🔗 Easy sharing to any app
-        </div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">❤️ Who is it for?</div>
-        <div class="faq-a">Built for curious minds everywhere — students, friends, communities, and anyone who wants to know what people really think.</div>
-      </div>
+      <div class="faq-item"><div class="faq-q">📖 What is VoxPop?</div><div class="faq-a">VoxPop is a social polling app that gives everyone a stage to be heard. Create polls about anything, vote on what matters, and chat with others who care about the same things.</div></div>
+      <div class="faq-item"><div class="faq-q">🎯 Why VoxPop?</div><div class="faq-a">Because decisions should be fun, fast, and inclusive. Whether it's a friendly debate, a community vote, or just figuring out where to eat — VoxPop makes every voice count.</div></div>
+      <div class="faq-item"><div class="faq-q">✨ What's inside?</div><div class="faq-a">🌐 Public & Private Polls<br>🖼️ Image-based voting<br>💬 Real-time chats on every poll<br>⭐ XP & Level system<br>🔒 Anonymous voting option<br>🔗 Easy sharing to any app</div></div>
+      <div class="faq-item"><div class="faq-q">❤️ Who is it for?</div><div class="faq-a">Built for curious minds everywhere — students, friends, communities, and anyone who wants to know what people really think.</div></div>
       <div style="text-align:center; margin-top: 30px; color: #555555; font-size: 12px; padding-bottom: 20px;">Made with ❤️ for people who love to be heard</div>
     </div>
   </div>
@@ -456,34 +445,13 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
       <div class="overlay-title">Help & Support ❓</div>
     </div>
     <div class="create-content">
-      <div class="faq-item">
-        <div class="faq-q">📝 How do I create a poll?</div>
-        <div class="faq-a">Tap the yellow ➕ button at the bottom. Type your question, add 2-6 options, then tap "Post Poll".</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">🔒 What's Private vs Public?</div>
-        <div class="faq-a"><strong>Public</strong> polls appear on Explore where anyone can vote.<br><strong>Private</strong> polls only show on your Home — like your own personal opinion board.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">⭐ How do I earn XP?</div>
-        <div class="faq-a">+5 XP for voting on a new poll, +2 XP for every chat message, +20 XP for creating a poll. Level up to unlock titles!</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">👀 Why can't I see my friend's poll?</div>
-        <div class="faq-a">If they made it <strong>Private</strong>, only they can see it. Ask them to make it <strong>Public</strong> so it shows up on Explore for everyone.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">🖼️ How do I add images to polls?</div>
-        <div class="faq-a">When creating a poll, tap the image box under any option. You can upload from your phone or paste an image link.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">🔗 How do I share a poll?</div>
-        <div class="faq-a">On any poll card, tap the blue 🔗 Share button. Choose WhatsApp, Twitter, or Copy the link to paste anywhere — including VoxPop chats!</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">🚪 How do I log out?</div>
-        <div class="faq-a">Open the menu ☰ (top left) and tap "Logout" at the bottom. Or go to App Settings → Logout.</div>
-      </div>
+      <div class="faq-item"><div class="faq-q">📝 How do I create a poll?</div><div class="faq-a">Tap the yellow ➕ button at the bottom. Type your question, add 2-6 options, then tap "Post Poll".</div></div>
+      <div class="faq-item"><div class="faq-q">🔒 What's Private vs Public?</div><div class="faq-a"><strong>Public</strong> polls appear on Explore where anyone can vote.<br><strong>Private</strong> polls only show on your Home — like your own personal opinion board.</div></div>
+      <div class="faq-item"><div class="faq-q">⭐ How do I earn XP?</div><div class="faq-a">+5 XP for voting on a new poll, +2 XP for every chat message, +20 XP for creating a poll. Level up to unlock titles!</div></div>
+      <div class="faq-item"><div class="faq-q">👀 How do I see someone's profile?</div><div class="faq-a">Tap any username on a poll card. You'll see their bio, level, and public polls.</div></div>
+      <div class="faq-item"><div class="faq-q">🔐 I forgot my password!</div><div class="faq-a">Tap "Forgot password?" on the login screen. Enter your email and we'll send you a reset link.</div></div>
+      <div class="faq-item"><div class="faq-q">🔗 How do I share a poll?</div><div class="faq-a">On any poll card, tap the blue 🔗 Share button. Choose WhatsApp, Twitter, or Copy the link to paste anywhere.</div></div>
+      <div class="faq-item"><div class="faq-q">🚪 How do I log out?</div><div class="faq-a">Open the menu ☰ (top left) and tap "Logout" at the bottom.</div></div>
     </div>
   </div>
 
@@ -494,18 +462,8 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
     </div>
     <div class="create-content">
       <p style="color: #888888; font-size: 13px; margin-top: 0;">Found a bug? Have an idea? Want a new feature? Tell us — we read everything.</p>
-      <div class="form-group">
-        <label>Your Message</label>
-        <textarea id="feedbackText" placeholder="I think VoxPop should..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Type</label>
-        <select id="feedbackType">
-          <option value="bug">🐛 Bug Report</option>
-          <option value="idea">💡 Feature Idea</option>
-          <option value="other">💬 Just Saying Hi</option>
-        </select>
-      </div>
+      <div class="form-group"><label>Your Message</label><textarea id="feedbackText" placeholder="I think VoxPop should..."></textarea></div>
+      <div class="form-group"><label>Type</label><select id="feedbackType"><option value="bug">🐛 Bug Report</option><option value="idea">💡 Feature Idea</option><option value="other">💬 Just Saying Hi</option></select></div>
       <button class="post-btn" id="feedbackBtn" onclick="submitFeedback()">Send Feedback</button>
     </div>
   </div>
@@ -589,6 +547,8 @@ let newPollVisibility = "public";
 let unsubPolls = null;
 let unsubChat = null;
 let shareModalPollId = null;
+let viewingUserId = null;
+let viewingUserProfile = null;
 
 auth.onAuthStateChanged(async (user) => {
   if (user) {
@@ -601,12 +561,8 @@ auth.onAuthStateChanged(async (user) => {
         currentUserProfile = docSnap.data();
       } else {
         currentUserProfile = {
-          name: user.email.split('@')[0],
-          username: user.email.split('@')[0].toLowerCase(),
-          email: user.email,
-          bio: "Just joined VoxPop 🚀",
-          avatar: "🦊",
-          xp: 10,
+          name: user.email.split('@')[0], username: user.email.split('@')[0].toLowerCase(),
+          email: user.email, bio: "Just joined VoxPop 🚀", avatar: "🦊", xp: 10,
           joinedAt: Date.now()
         };
         await docRef.set(currentUserProfile);
@@ -614,13 +570,10 @@ auth.onAuthStateChanged(async (user) => {
       hideLoading();
       enterApp();
     } catch (e) {
-      hideLoading();
-      console.error(e);
-      alert("Error loading profile: " + e.message);
+      hideLoading(); console.error(e); alert("Error: " + e.message);
     }
   } else {
-    currentUser = null;
-    currentUserProfile = null;
+    currentUser = null; currentUserProfile = null;
     if (unsubPolls) { unsubPolls(); unsubPolls = null; }
     document.getElementById('appScreen').classList.remove('active');
     document.getElementById('authScreen').classList.remove('hidden');
@@ -629,21 +582,16 @@ auth.onAuthStateChanged(async (user) => {
 
 function startPollsListener() {
   if (unsubPolls) unsubPolls();
-  unsubPolls = db.collection('polls')
-    .orderBy('createdAt', 'desc')
+  unsubPolls = db.collection('polls').orderBy('createdAt', 'desc')
     .onSnapshot((snapshot) => {
       polls = snapshot.docs.map(doc => {
         const data = doc.data();
         return { id: doc.id, ...data, createdAt: data.createdAt ? data.createdAt.toDate().getTime() : Date.now() };
       });
-      renderHome();
-      renderExplorePolls();
-      renderProfile();
+      renderHome(); renderExplorePolls(); renderProfile();
+      if (viewingUserId) renderViewProfilePolls();
       updateXPBadge();
-    }, (err) => {
-      console.error("Polls listener error:", err);
-      alert("Database error: " + err.message);
-    });
+    }, (err) => console.error("Polls error:", err));
 }
 
 function formatTime(ms) {
@@ -681,10 +629,8 @@ async function awardXP(amount, reason) {
   if (!currentUser) return;
   const newXP = (currentUserProfile.xp || 0) + amount;
   currentUserProfile.xp = newXP;
-  try {
-    await db.collection('users').doc(currentUser.uid).update({ xp: newXP });
-    updateXPBadge();
-  } catch (e) { console.log("XP error:", e); }
+  try { await db.collection('users').doc(currentUser.uid).update({ xp: newXP }); updateXPBadge(); }
+  catch (e) { console.log("XP error:", e); }
 }
 function updateXPBadge() {
   if (!currentUserProfile) return;
@@ -715,20 +661,24 @@ function refreshSettingsAvatars() {
   buildAvatarGrid('settingsAvatarGrid', settingsSelectedAvatar, e => { settingsSelectedAvatar = e; refreshSettingsAvatars(); });
 }
 
-function showLoading(text) {
-  document.getElementById('loadingText').textContent = text || "Loading...";
-  document.getElementById('loadingOverlay').classList.add('show');
-}
+function showLoading(text) { document.getElementById('loadingText').textContent = text || "Loading..."; document.getElementById('loadingOverlay').classList.add('show'); }
 function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
-function showSaveFlash() {
-  const f = document.getElementById('saveFlash');
-  f.classList.add('show');
-  setTimeout(() => f.classList.remove('show'), 800);
-}
+function showSaveFlash() { const f = document.getElementById('saveFlash'); f.classList.add('show'); setTimeout(() => f.classList.remove('show'), 800); }
 function togglePwd(id, icon) {
   const i = document.getElementById(id);
   if (i.type === "password") { i.type = "text"; icon.textContent = "🙈"; }
   else { i.type = "password"; icon.textContent = "👁️"; }
+}
+
+async function handleForgotPassword() {
+  const email = prompt("Enter your account email to reset password:");
+  if (!email) return;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    alert("✅ Reset link sent to " + email + "\n\nCheck your inbox (and spam folder). Click the link to set a new password.");
+  } catch (e) {
+    alert("Could not send reset email: " + e.message);
+  }
 }
 
 function triggerFilePicker(letter) { document.getElementById('file' + letter).click(); }
@@ -809,18 +759,11 @@ function addOptionField() {
   container.appendChild(group);
   updateAddBtn();
 }
-function removeOptionField(letter) {
-  document.getElementById('optGroup' + letter).remove();
-  optionCount--;
-  updateAddBtn();
-}
+function removeOptionField(letter) { document.getElementById('optGroup' + letter).remove(); optionCount--; updateAddBtn(); }
 function updateAddBtn() {
   const btn = document.getElementById('addOptionBtn');
-  if (optionCount >= MAX_OPTIONS) {
-    btn.textContent = "Maximum reached"; btn.disabled = true; btn.style.opacity = "0.5";
-  } else {
-    btn.textContent = "➕ Add another option"; btn.disabled = false; btn.style.opacity = "1";
-  }
+  if (optionCount >= MAX_OPTIONS) { btn.textContent = "Maximum reached"; btn.disabled = true; btn.style.opacity = "0.5"; }
+  else { btn.textContent = "➕ Add another option"; btn.disabled = false; btn.style.opacity = "1"; }
 }
 function resetOptionFields() {
   document.getElementById('optionsContainer').innerHTML = '';
@@ -857,7 +800,7 @@ async function handleSignup() {
   try {
     const result = await auth.createUserWithEmailAndPassword(email, password);
     const userProfile = {
-      name: name, username: username, email: email,
+      name, username, email,
       bio: bio || "Just joined VoxPop 🚀",
       avatar: signupSelectedAvatar, xp: 10,
       joinedAt: Date.now(),
@@ -865,11 +808,9 @@ async function handleSignup() {
     };
     await db.collection('users').doc(result.user.uid).set(userProfile);
     currentUserProfile = userProfile;
-    updateUserUI();
-    hideLoading();
+    updateUserUI(); hideLoading();
   } catch (e) {
-    hideLoading();
-    btn.disabled = false; btn.textContent = "Create Account";
+    hideLoading(); btn.disabled = false; btn.textContent = "Create Account";
     alert("Signup failed: " + e.message);
   }
 }
@@ -881,25 +822,16 @@ async function handleLogin() {
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = "Logging in...";
   showLoading("Logging in...");
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-  } catch (e) {
-    hideLoading();
-    btn.disabled = false; btn.textContent = "Login";
-    alert("Login failed: " + e.message);
-  }
+  try { await auth.signInWithEmailAndPassword(email, password); }
+  catch (e) { hideLoading(); btn.disabled = false; btn.textContent = "Login"; alert("Login failed: " + e.message); }
 }
 
-function logout() {
-  if (confirm("Log out?")) auth.signOut();
-}
+function logout() { if (confirm("Log out?")) auth.signOut(); }
 
 function enterApp() {
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('appScreen').classList.add('active');
-  updateUserUI();
-  updateXPBadge();
-  startPollsListener();
+  updateUserUI(); updateXPBadge(); startPollsListener();
 }
 
 function updateUserUI() {
@@ -977,8 +909,17 @@ function buildPollCardHTML(poll) {
   const pl = poll.visibility === 'private' ? '🔒 Private' : '🌐 Public';
   const ib = hasImages ? '<span class="image-badge">🖼️ Image Poll</span>' : '';
   const timeAgo = formatTime(poll.createdAt);
+  const avatar = poll.avatar || '🦊';
+  const isOwnPoll = poll.authorId === currentUser.uid;
+  const authorClick = isOwnPoll ? 'openProfile()' : 'viewUserProfile(\'' + poll.authorId + '\')';
   return '<div class="poll-card">' +
-    '<div class="poll-header"><span class="username">' + poll.username + '</span><span class="timestamp">' + timeAgo + '</span></div>' +
+    '<div class="poll-header">' +
+      '<div class="poll-author" onclick="' + authorClick + '">' +
+        '<div class="author-avatar-mini">' + avatar + '</div>' +
+        '<span class="username">' + poll.username + '</span>' +
+      '</div>' +
+      '<span class="timestamp">' + timeAgo + '</span>' +
+    '</div>' +
     '<div class="poll-question">' + poll.question + '<span class="privacy-badge ' + pc + '">' + pl + '</span></div>' +
     optionsHTML +
     '<div class="poll-footer"><span class="vote-count">' + total + ' votes' + anonBadge + ib + '</span>' +
@@ -1014,6 +955,71 @@ function renderExplorePolls() {
   fil.forEach(p => { l.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
 }
 
+// ===== VIEW USER PROFILE =====
+async function viewUserProfile(uid) {
+  if (!uid) return;
+  viewingUserId = uid;
+  document.getElementById('viewProfileScreen').classList.add('active');
+  document.getElementById('viewName').textContent = "Loading...";
+  document.getElementById('viewHandle').textContent = "";
+  document.getElementById('viewBio').textContent = "";
+  document.getElementById('viewJoined').textContent = "";
+  document.getElementById('viewAvatar').textContent = "🦊";
+  document.getElementById('viewPollsList').innerHTML = "";
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    if (!doc.exists) { alert("User not found"); closeViewProfile(); return; }
+    viewingUserProfile = doc.data();
+    document.getElementById('viewAvatar').textContent = viewingUserProfile.avatar || "🦊";
+    document.getElementById('viewName').textContent = viewingUserProfile.name || "User";
+    document.getElementById('viewHandle').textContent = "@" + (viewingUserProfile.username || "user");
+    document.getElementById('viewBio').textContent = viewingUserProfile.bio || "";
+    if (viewingUserProfile.joinedAt) {
+      document.getElementById('viewJoined').textContent = "📅 Joined " + formatDate(viewingUserProfile.joinedAt);
+    }
+    const info = calculateLevel(viewingUserProfile.xp || 0);
+    document.getElementById('viewLevelTitle').textContent = "Level " + info.level + " · " + getLevelTitle(info.level);
+    document.getElementById('viewXpText').textContent = info.currentXP + " / " + info.neededXP + " XP";
+    document.getElementById('viewXpFill').style.width = Math.min((info.currentXP / info.neededXP) * 100, 100) + "%";
+    renderViewProfilePolls();
+  } catch (e) { alert("Could not load: " + e.message); closeViewProfile(); }
+}
+
+function renderViewProfilePolls() {
+  if (!viewingUserId) return;
+  const theirPolls = polls.filter(p => p.authorId === viewingUserId && p.visibility === 'public');
+  let tv = 0;
+  theirPolls.forEach(p => { if (p.votes) tv += p.votes.reduce((a,b) => a+b, 0); });
+  document.getElementById('viewStatPolls').textContent = theirPolls.length;
+  document.getElementById('viewStatVotes').textContent = tv;
+  document.getElementById('viewStatFollowers').textContent = theirPolls.length * 3;
+  const l = document.getElementById('viewPollsList');
+  if (theirPolls.length === 0) {
+    l.innerHTML = '<div style="color:#888; font-size:13px; text-align:center; padding:20px;">No public polls yet.</div>';
+    return;
+  }
+  l.innerHTML = '';
+  theirPolls.forEach(p => { l.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
+}
+
+function closeViewProfile() {
+  document.getElementById('viewProfileScreen').classList.remove('active');
+  viewingUserId = null;
+  viewingUserProfile = null;
+}
+
+function toggleFollow() {
+  const btn = document.getElementById('followBtn');
+  if (btn.classList.contains('following')) {
+    btn.classList.remove('following');
+    btn.textContent = "Follow";
+  } else {
+    btn.classList.add('following');
+    btn.textContent = "Following ✓";
+    alert("🎉 You're now following @" + (viewingUserProfile.username || 'user'));
+  }
+}
+
 async function vote(pollId, optionIndex) {
   if (!currentUser) return;
   const pollRef = db.collection('polls').doc(pollId);
@@ -1038,10 +1044,7 @@ async function vote(pollId, optionIndex) {
         tx.update(userRef, { xp: newXP });
       }
     });
-  } catch (e) {
-    console.error("Vote error:", e);
-    alert("Could not save vote: " + e.message);
-  }
+  } catch (e) { console.error(e); alert("Could not vote: " + e.message); }
 }
 
 function renderProfile() {
@@ -1055,8 +1058,7 @@ function renderProfile() {
   const info = calculateLevel(currentUserProfile.xp || 0);
   document.getElementById('levelTitle').textContent = "Level " + info.level + " · " + getLevelTitle(info.level);
   document.getElementById('xpText').textContent = info.currentXP + " / " + info.neededXP + " XP";
-  const pct = Math.min((info.currentXP / info.neededXP) * 100, 100);
-  document.getElementById('xpFill').style.width = pct + "%";
+  document.getElementById('xpFill').style.width = Math.min((info.currentXP / info.neededXP) * 100, 100) + "%";
   const l = document.getElementById('myPollsList');
   if (mp.length === 0) {
     l.innerHTML = '<div style="color:#888; font-size:13px; text-align:center; padding:20px;">You haven\'t created any polls yet.</div>';
@@ -1074,11 +1076,8 @@ function setVisibility(t) {
   document.getElementById('visPrivate').classList.toggle('active', t === 'private');
   document.getElementById('visPublic').classList.toggle('active', t === 'public');
   const hint = document.getElementById('visibilityHint');
-  if (t === 'private') {
-    hint.textContent = "🔒 Private polls only show on your Home — only you see them.";
-  } else {
-    hint.textContent = "🌐 Public polls appear on Explore so anyone can vote.";
-  }
+  if (t === 'private') hint.textContent = "🔒 Private polls only show on your Home.";
+  else hint.textContent = "🌐 Public polls appear on Explore so anyone can vote.";
 }
 
 function openExplore() { document.getElementById('exploreScreen').classList.add('active'); renderExplorePolls(); }
@@ -1104,30 +1103,18 @@ async function submitFeedback() {
   btn.disabled = true; btn.textContent = "Sending...";
   try {
     await db.collection('feedback').add({
-      userId: currentUser.uid,
-      username: currentUserProfile.username,
-      type: type,
-      text: text,
-      createdAt: FieldValue.serverTimestamp()
+      userId: currentUser.uid, username: currentUserProfile.username,
+      type, text, createdAt: FieldValue.serverTimestamp()
     });
     document.getElementById('feedbackText').value = "";
     btn.disabled = false; btn.textContent = "Send Feedback";
     alert("✅ Thank you! Your feedback has been sent.");
     closeFeedback();
-  } catch (e) {
-    btn.disabled = false; btn.textContent = "Send Feedback";
-    alert("Could not send: " + e.message);
-  }
+  } catch (e) { btn.disabled = false; btn.textContent = "Send Feedback"; alert("Could not send: " + e.message); }
 }
 
-function openDrawer() {
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('drawerOverlay').classList.add('open');
-}
-function closeDrawer() {
-  document.getElementById('drawer').classList.remove('open');
-  document.getElementById('drawerOverlay').classList.remove('open');
-}
+function openDrawer() { document.getElementById('drawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); }
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
 function openAccountSettings() { closeDrawer(); settingsSelectedAvatar = currentUserProfile.avatar; refreshSettingsAvatars(); document.getElementById('accountSettingsScreen').classList.add('active'); }
 function closeAccountSettings() { document.getElementById('accountSettingsScreen').classList.remove('active'); }
 function openAppSettings() { closeDrawer(); document.getElementById('appSettingsScreen').classList.add('active'); }
@@ -1144,15 +1131,9 @@ function filterPolls(cat, chipEl) {
   renderExplorePolls();
 }
 
-// ===== SHARE MODAL =====
-function openShareModal(pollId) {
-  shareModalPollId = pollId;
-  document.getElementById('shareModalOverlay').classList.add('open');
-}
-function closeShareModal() {
-  document.getElementById('shareModalOverlay').classList.remove('open');
-  shareModalPollId = null;
-}
+// SHARE
+function openShareModal(pollId) { shareModalPollId = pollId; document.getElementById('shareModalOverlay').classList.add('open'); }
+function closeShareModal() { document.getElementById('shareModalOverlay').classList.remove('open'); shareModalPollId = null; }
 function getShareData() {
   const poll = polls.find(p => p.id === shareModalPollId);
   if (!poll) return null;
@@ -1164,29 +1145,17 @@ function shareVia(platform) {
   const data = getShareData();
   if (!data) return;
   if (platform === 'copy') {
-    navigator.clipboard.writeText(data.text).then(() => {
-      alert("✅ Copied! Paste it anywhere — WhatsApp, VoxPop chats, or any app.");
-      closeShareModal();
-    }).catch(() => {
-      prompt("Copy this:", data.text);
-      closeShareModal();
-    });
-  } else if (platform === 'whatsapp') {
-    window.open("https://wa.me/?text=" + encodeURIComponent(data.text), "_blank");
-    closeShareModal();
-  } else if (platform === 'twitter') {
-    window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(data.text), "_blank");
-    closeShareModal();
-  } else if (platform === 'native') {
-    if (navigator.share) {
-      navigator.share({ title: "VoxPop Poll", text: data.text }).then(() => closeShareModal()).catch(() => closeShareModal());
-    } else {
-      alert("Sharing not supported on this device. Use Copy instead!");
-    }
+    navigator.clipboard.writeText(data.text).then(() => { alert("✅ Copied! Paste it anywhere."); closeShareModal(); })
+      .catch(() => { prompt("Copy this:", data.text); closeShareModal(); });
+  } else if (platform === 'whatsapp') { window.open("https://wa.me/?text=" + encodeURIComponent(data.text), "_blank"); closeShareModal(); }
+  else if (platform === 'twitter') { window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(data.text), "_blank"); closeShareModal(); }
+  else if (platform === 'native') {
+    if (navigator.share) navigator.share({ title: "VoxPop Poll", text: data.text }).then(() => closeShareModal()).catch(() => closeShareModal());
+    else alert("Sharing not supported. Use Copy instead!");
   }
 }
 
-// ===== CHAT =====
+// CHAT
 function openChat(pollId) {
   const poll = polls.find(x => x.id === pollId);
   if (!poll) return;
@@ -1194,15 +1163,11 @@ function openChat(pollId) {
   document.getElementById('chatTitle').textContent = "💬 " + poll.question;
   document.getElementById('chatMessages').innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">Loading...</div>';
   if (unsubChat) { unsubChat(); unsubChat = null; }
-  unsubChat = db.collection('polls').doc(pollId).collection('messages')
-    .orderBy('createdAt', 'asc')
+  unsubChat = db.collection('polls').doc(pollId).collection('messages').orderBy('createdAt', 'asc')
     .onSnapshot((snap) => {
       const c = document.getElementById('chatMessages');
       c.innerHTML = '';
-      if (snap.empty) {
-        c.innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">No messages yet. Say hi! 👋</div>';
-        return;
-      }
+      if (snap.empty) { c.innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">No messages yet. Say hi! 👋</div>'; return; }
       snap.forEach(doc => {
         const m = doc.data();
         const isOwn = m.userId === currentUser.uid;
@@ -1216,16 +1181,8 @@ function openChat(pollId) {
     }, (err) => console.error("Chat error:", err));
   document.getElementById('chatScreen').classList.add('active');
 }
-function escapeHtml(t) {
-  const d = document.createElement('div');
-  d.textContent = t;
-  return d.innerHTML;
-}
-function closeChat() {
-  document.getElementById('chatScreen').classList.remove('active');
-  activeChatPollId = null;
-  if (unsubChat) { unsubChat(); unsubChat = null; }
-}
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function closeChat() { document.getElementById('chatScreen').classList.remove('active'); activeChatPollId = null; if (unsubChat) { unsubChat(); unsubChat = null; } }
 async function sendMessage() {
   const input = document.getElementById('messageInput');
   const text = input.value.trim();
@@ -1233,10 +1190,8 @@ async function sendMessage() {
   input.value = "";
   try {
     await db.collection('polls').doc(activeChatPollId).collection('messages').add({
-      userId: currentUser.uid,
-      username: "@" + currentUserProfile.username,
-      text: text,
-      createdAt: FieldValue.serverTimestamp()
+      userId: currentUser.uid, username: "@" + currentUserProfile.username,
+      text, createdAt: FieldValue.serverTimestamp()
     });
     await awardXP(2, "Chatted");
   } catch (e) { alert("Could not send: " + e.message); }
@@ -1267,14 +1222,9 @@ async function submitPoll() {
       authorId: currentUser.uid,
       username: "@" + currentUserProfile.username,
       avatar: currentUserProfile.avatar,
-      question: q,
-      category: cat,
-      visibility: newPollVisibility,
-      options: options,
-      votes: new Array(options.length).fill(0),
-      voters: {},
-      anonymous: isAnon,
-      showVoters: showV,
+      question: q, category: cat, visibility: newPollVisibility,
+      options, votes: new Array(options.length).fill(0), voters: {},
+      anonymous: isAnon, showVoters: showV,
       createdAt: FieldValue.serverTimestamp()
     });
     await awardXP(20, "Created poll");
@@ -1285,9 +1235,8 @@ async function submitPoll() {
     btn.disabled = false; btn.textContent = "Post Poll";
     closeCreate();
   } catch (e) {
-    hideLoading();
-    btn.disabled = false; btn.textContent = "Post Poll";
-    alert("Could not post poll: " + e.message);
+    hideLoading(); btn.disabled = false; btn.textContent = "Post Poll";
+    alert("Could not post: " + e.message);
   }
 }
 
