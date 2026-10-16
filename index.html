@@ -4,181 +4,187 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoxPop — Voice of the People</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
-  body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff; overflow: hidden; height: 100vh; display: flex; justify-content: center; }
+body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff; overflow: hidden; height: 100vh; display: flex; justify-content: center; }
+.auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); z-index: 500; display: flex; flex-direction: column; justify-content: center; padding: 30px; box-sizing: border-box; overflow-y: auto; }
+.auth-screen.hidden { display: none; }
+.auth-logo { text-align: center; font-size: 32px; font-weight: bold; color: #87CEEB; margin-bottom: 5px; }
+.auth-tagline { text-align: center; font-size: 12px; color: #888888; margin-bottom: 35px; letter-spacing: 1.5px; text-transform: uppercase; }
+.auth-tabs { display: flex; background-color: #16213e; border-radius: 30px; padding: 5px; margin-bottom: 25px; border: 1px solid #2a2a4a; }
+.auth-tab { flex: 1; padding: 12px; border: none; border-radius: 25px; background-color: transparent; color: #888888; font-weight: bold; cursor: pointer; font-size: 14px; }
+.auth-tab.active { background-color: #87CEEB; color: #1a1a2e; }
+.auth-form { display: flex; flex-direction: column; }
+.auth-form.hidden { display: none; }
+.auth-form label { font-size: 12px; color: #888888; margin-bottom: 6px; margin-top: 4px; }
+.auth-form input { width: 100%; padding: 15px; background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 12px; color: white; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 15px; }
+.auth-form input:focus { border-color: #87CEEB; }
+.password-wrapper { position: relative; margin-bottom: 15px; }
+.password-wrapper input { margin-bottom: 0 !important; padding-right: 50px; }
+.toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; opacity: 0.7; }
+.avatar-section { margin-bottom: 20px; }
+.avatar-section-title { font-size: 12px; color: #888888; margin-bottom: 10px; text-align: center; }
+.avatar-preview { width: 80px; height: 80px; margin: 0 auto 15px auto; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background-color: #16213e; padding: 12px; border-radius: 12px; border: 1px solid #2a2a4a; }
+.avatar-option { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 22px; border-radius: 10px; cursor: pointer; background-color: #1a1a2e; border: 2px solid transparent; }
+.avatar-option.selected { border-color: #87CEEB; background-color: #2a2a4a; }
+.auth-btn { width: 100%; padding: 16px; background-color: #87CEEB; color: #1a1a2e; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; }
+.auth-btn:disabled { opacity: 0.6; cursor: wait; }
+.app-screen { display: none; width: 100%; height: 100%; }
+.app-screen.active { display: flex; justify-content: center; }
+.feed-screen { width: 100%; max-width: 400px; height: 100vh; overflow-y: auto; padding: 20px; padding-bottom: 90px; box-sizing: border-box; }
+.feed-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.menu-btn { background: none; border: none; color: #87CEEB; font-size: 24px; cursor: pointer; padding: 0; }
+.logo { font-weight: bold; font-size: 22px; color: #87CEEB; }
+.xp-badge { background-color: #16213e; border: 1px solid #87CEEB; color: #87CEEB; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+.home-header { text-align: center; margin-bottom: 25px; }
+.home-header h2 { font-size: 18px; margin: 0 0 5px 0; }
+.home-header p { font-size: 12px; color: #888888; margin: 0; }
+.empty-state { text-align: center; padding: 50px 20px; background-color: #16213e; border-radius: 15px; border: 1px dashed #2a2a4a; margin-top: 20px; }
+.empty-icon { font-size: 50px; margin-bottom: 15px; opacity: 0.7; }
+.empty-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+.empty-text { font-size: 13px; color: #888888; line-height: 1.5; margin-bottom: 20px; }
+.empty-btn { background-color: #87CEEB; color: #1a1a2e; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 13px; cursor: pointer; }
+.poll-card { background-color: #16213e; width: 100%; border-radius: 15px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); border: 1px solid #2a2a4a; box-sizing: border-box; margin-bottom: 20px; }
+.poll-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; }
+.username { font-weight: bold; color: #e94560; }
+.timestamp { color: #888888; }
+.poll-question { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+.poll-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+.option-btn { width: 100%; padding: 15px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px; color: #ffffff; font-size: 15px; text-align: left; cursor: pointer; position: relative; overflow: hidden; z-index: 1; }
+.option-btn:hover { border-color: #e94560; }
+.progress-bar { position: absolute; left: 0; top: 0; height: 100%; background-color: #e94560; opacity: 0.3; z-index: -1; transition: width 0.5s ease; }
+.percentage-text { float: right; font-weight: bold; color: #e94560; }
+.image-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+.image-options.three-cols { grid-template-columns: repeat(3, 1fr); }
+.image-option { position: relative; background-color: #1a1a2e; border: 2px solid #2a2a4a; border-radius: 12px; overflow: hidden; cursor: pointer; aspect-ratio: 1; }
+.image-option:hover { border-color: #e94560; }
+.image-option.voted { border-color: #e94560; }
+.image-option img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-option .option-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.95)); padding: 30px 8px 10px 8px; font-size: 12px; font-weight: bold; text-align: center; color: white; }
+.image-option .pct-overlay { position: absolute; top: 8px; right: 8px; background-color: #e94560; color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+.poll-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #2a2a4a; }
+.vote-count { font-size: 13px; color: #888888; }
+.poll-actions { display: flex; gap: 8px; }
+.chat-btn, .share-btn { background-color: transparent; border: 1px solid #e94560; color: #e94560; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
+.share-btn { border-color: #87CEEB; color: #87CEEB; }
+.voters-list { font-size: 12px; color: #87CEEB; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #2a2a4a; }
+.privacy-badge { display: inline-block; font-size: 10px; padding: 3px 8px; background-color: #2a2a4a; color: #87CEEB; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+.privacy-badge.private { background-color: #3a1e3e; color: #e94560; }
+.image-badge { display: inline-block; font-size: 10px; padding: 3px 8px; background-color: #1e3a2e; color: #4ade80; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background-color: #16213e; border-top: 1px solid #2a2a4a; display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 10px; }
+.nav-item { background: none; border: none; color: #888888; font-size: 22px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; }
+.nav-item span { font-size: 10px; font-weight: bold; }
+.nav-item.active { color: #87CEEB; }
+.nav-item.create-nav-btn { color: #1a1a2e; background-color: #87CEEB; border-radius: 50%; width: 50px; height: 50px; justify-content: center; margin-bottom: 10px; }
+.overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a2e; display: none; flex-direction: column; z-index: 100; }
+.overlay-screen.active { display: flex; }
+.overlay-header { background-color: #16213e; padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #2a2a4a; }
+.back-btn { background: none; border: none; color: #e94560; font-size: 20px; cursor: pointer; padding: 0; }
+.overlay-title { font-weight: bold; font-size: 16px; }
+.chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+.message.own { align-self: flex-end; background-color: #87CEEB; color: #1a1a2e; border-bottom-right-radius: 5px; }
+.message.other { align-self: flex-start; background-color: #2a2a4a; color: #ffffff; border-bottom-left-radius: 5px; }
+.message .sender { font-size: 10px; opacity: 0.7; margin-bottom: 3px; font-weight: bold; }
+.chat-input-area { background-color: #16213e; padding: 15px 20px; display: flex; gap: 10px; border-top: 1px solid #2a2a4a; }
+.chat-input-area input { flex: 1; padding: 12px 15px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 25px; color: white; outline: none; }
+.send-btn { background-color: #87CEEB; color: #1a1a2e; border: none; border-radius: 25px; padding: 0 20px; font-weight: bold; cursor: pointer; }
+.profile-content { padding: 30px 20px; flex: 1; overflow-y: auto; }
+.profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+.avatar { width: 90px; height: 90px; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 42px; margin-bottom: 15px; }
+.profile-name { font-size: 22px; font-weight: bold; margin: 0 0 5px 0; }
+.profile-handle { color: #888888; font-size: 14px; margin: 0; }
+.profile-bio { color: #cccccc; font-size: 13px; text-align: center; margin: 10px 20px 0 20px; line-height: 1.4; }
+.profile-joined { color: #555555; font-size: 11px; margin-top: 8px; }
+.level-bar-container { width: 100%; background-color: #16213e; border-radius: 15px; padding: 15px; border: 1px solid #2a2a4a; margin-bottom: 20px; margin-top: 20px; }
+.level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
+.level-title { color: #87CEEB; font-weight: bold; }
+.xp-text { color: #888888; font-size: 12px; }
+.xp-track { width: 100%; height: 8px; background-color: #1a1a2e; border-radius: 10px; overflow: hidden; }
+.xp-fill { height: 100%; background: linear-gradient(90deg, #87CEEB, #e94560); transition: width 0.5s ease; border-radius: 10px; }
+.stats-row { display: flex; justify-content: space-around; background-color: #16213e; padding: 15px; border-radius: 15px; border: 1px solid #2a2a4a; margin-bottom: 30px; }
+.stat-box { text-align: center; }
+.stat-box strong { display: block; font-size: 18px; }
+.stat-box span { font-size: 12px; color: #888888; }
+.section-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #87CEEB; }
+.create-content { padding: 20px; flex: 1; overflow-y: auto; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 14px; color: #888888; margin-bottom: 8px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 15px; background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 10px; color: white; font-size: 15px; box-sizing: border-box; outline: none; font-family: inherit; }
+.form-group textarea { min-height: 120px; resize: vertical; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #87CEEB; }
+.option-input-group { background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.option-input-group .opt-label { font-size: 12px; color: #87CEEB; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.remove-opt-btn { background-color: transparent; border: none; color: #e94560; font-size: 16px; cursor: pointer; padding: 0; }
+.image-picker { width: 100%; height: 120px; background-color: #1a1a2e; border: 2px dashed #2a2a4a; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; }
+.image-picker.has-image { border-style: solid; border-color: #87CEEB; }
+.image-picker img { width: 100%; height: 100%; object-fit: cover; }
+.picker-placeholder { color: #888888; font-size: 12px; text-align: center; padding: 10px; }
+.picker-remove { position: absolute; top: 6px; right: 6px; background-color: rgba(233,69,96,0.9); color: white; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px; font-weight: bold; display: none; align-items: center; justify-content: center; z-index: 5; }
+.image-picker.has-image .picker-remove { display: flex; }
+.url-input { font-size: 11px !important; padding: 10px !important; }
+.add-option-btn { width: 100%; padding: 15px; background-color: transparent; border: 2px dashed #2a2a4a; border-radius: 12px; color: #87CEEB; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+.add-option-btn:hover { border-color: #87CEEB; background-color: #16213e; }
+.visibility-row { display: flex; gap: 10px; margin-bottom: 15px; }
+.visibility-btn { flex: 1; padding: 15px 10px; background-color: #16213e; border: 2px solid #2a2a4a; border-radius: 12px; color: #888888; cursor: pointer; text-align: center; }
+.visibility-btn.active { border-color: #87CEEB; color: #ffffff; background-color: #1a1a2e; }
+.visibility-btn .v-icon { font-size: 22px; display: block; margin-bottom: 5px; }
+.visibility-btn .v-label { font-size: 13px; font-weight: bold; display: block; }
+.visibility-btn .v-desc { font-size: 10px; color: #888888; display: block; margin-top: 3px; }
+.visibility-hint { font-size: 11px; color: #87CEEB; margin-top: 8px; line-height: 1.4; text-align: center; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; background-color: #16213e; padding: 15px; border-radius: 12px; border: 1px solid #2a2a4a; margin-bottom: 12px; }
+.setting-info { flex: 1; }
+.setting-label { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
+.setting-desc { font-size: 11px; color: #888888; }
+.toggle-btn { background-color: #2a2a4a; color: #888888; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; min-width: 60px; }
+.toggle-btn.on { background-color: #87CEEB; color: #1a1a2e; }
+.post-btn { width: 100%; padding: 15px; background-color: #87CEEB; color: #1a1a2e; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+.post-btn:disabled { opacity: 0.6; cursor: wait; }
+.danger-btn { width: 100%; padding: 15px; background-color: transparent; color: #e94560; border: 1px solid #e94560; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
+.faq-item { background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+.faq-q { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #87CEEB; }
+.faq-a { font-size: 13px; color: #cccccc; line-height: 1.5; }
+.search-bar { width: 100%; padding: 15px; background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 25px; color: white; font-size: 14px; box-sizing: border-box; outline: none; margin-bottom: 20px; }
+.chips-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
+.chips-container::-webkit-scrollbar { display: none; }
+.chip { background-color: #16213e; border: 1px solid #2a2a4a; color: #888888; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+.chip.active, .chip:hover { background-color: #87CEEB; color: #1a1a2e; border-color: #87CEEB; }
+.drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 150; display: none; }
+.drawer-overlay.open { display: block; }
+.drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: #16213e; z-index: 200; transition: left 0.3s ease; padding: 20px; box-sizing: border-box; overflow-y: auto; border-right: 1px solid #2a2a4a; }
+.drawer.open { left: 0; }
+.drawer-header { display: flex; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid #2a2a4a; margin-bottom: 20px; }
+.drawer-avatar { width: 50px; height: 50px; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; }
+.drawer-name { font-weight: bold; font-size: 15px; }
+.drawer-handle { font-size: 12px; color: #888888; }
+.drawer-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; cursor: pointer; font-size: 14px; margin-bottom: 5px; }
+.drawer-item:hover { background-color: #1a1a2e; }
+.drawer-item.danger { color: #e94560; }
+.drawer-divider { height: 1px; background-color: #2a2a4a; margin: 15px 0; }
+.save-flash { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background-color: #87CEEB; color: #1a1a2e; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 999; pointer-events: none; }
+.save-flash.show { opacity: 1; }
+.loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 900; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 15px; }
+.loading-overlay.show { display: flex; }
+.spinner { width: 40px; height: 40px; border: 4px solid #2a2a4a; border-top-color: #87CEEB; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  /* AUTH */
-  .auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); z-index: 500; display: flex; flex-direction: column; justify-content: center; padding: 30px; box-sizing: border-box; overflow-y: auto; }
-  .auth-screen.hidden { display: none; }
-  .auth-logo { text-align: center; font-size: 32px; font-weight: bold; color: #87CEEB; margin-bottom: 5px; letter-spacing: 0.5px; }
-  .auth-tagline { text-align: center; font-size: 12px; color: #888888; margin-bottom: 35px; letter-spacing: 1.5px; text-transform: uppercase; }
-  .auth-tabs { display: flex; background-color: #16213e; border-radius: 30px; padding: 5px; margin-bottom: 25px; border: 1px solid #2a2a4a; }
-  .auth-tab { flex: 1; padding: 12px; border: none; border-radius: 25px; background-color: transparent; color: #888888; font-weight: bold; cursor: pointer; transition: all 0.3s; font-size: 14px; }
-  .auth-tab.active { background-color: #87CEEB; color: #1a1a2e; }
-  .auth-form { display: flex; flex-direction: column; }
-  .auth-form.hidden { display: none; }
-  .auth-form label { font-size: 12px; color: #888888; margin-bottom: 6px; margin-top: 4px; }
-  .auth-form input { width: 100%; padding: 15px; background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 12px; color: white; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 15px; }
-  .auth-form input:focus { border-color: #87CEEB; }
-  .password-wrapper { position: relative; margin-bottom: 15px; }
-  .password-wrapper input { margin-bottom: 0 !important; padding-right: 50px; }
-  .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; opacity: 0.7; }
-  .avatar-section { margin-bottom: 20px; }
-  .avatar-section-title { font-size: 12px; color: #888888; margin-bottom: 10px; text-align: center; }
-  .avatar-preview { width: 80px; height: 80px; margin: 0 auto 15px auto; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; }
-  .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background-color: #16213e; padding: 12px; border-radius: 12px; border: 1px solid #2a2a4a; }
-  .avatar-option { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 22px; border-radius: 10px; cursor: pointer; background-color: #1a1a2e; transition: all 0.2s; border: 2px solid transparent; }
-  .avatar-option:hover { background-color: #2a2a4a; }
-  .avatar-option.selected { border-color: #87CEEB; background-color: #2a2a4a; }
-  .auth-btn { width: 100%; padding: 16px; background-color: #87CEEB; color: #1a1a2e; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; }
-
-  /* APP */
-  .app-screen { display: none; width: 100%; height: 100%; }
-  .app-screen.active { display: flex; justify-content: center; }
-  .feed-screen { width: 100%; max-width: 400px; height: 100vh; overflow-y: auto; padding: 20px; padding-bottom: 90px; box-sizing: border-box; }
-  .feed-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .menu-btn { background: none; border: none; color: #87CEEB; font-size: 24px; cursor: pointer; padding: 0; }
-  .logo { font-weight: bold; font-size: 22px; color: #87CEEB; letter-spacing: 0.5px; }
-  .xp-badge { background-color: #16213e; border: 1px solid #87CEEB; color: #87CEEB; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
-  .home-header { text-align: center; margin-bottom: 25px; }
-  .home-header h2 { font-size: 18px; margin: 0 0 5px 0; }
-  .home-header p { font-size: 12px; color: #888888; margin: 0; }
-  .empty-state { text-align: center; padding: 50px 20px; background-color: #16213e; border-radius: 15px; border: 1px dashed #2a2a4a; margin-top: 20px; }
-  .empty-icon { font-size: 50px; margin-bottom: 15px; opacity: 0.7; }
-  .empty-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; }
-  .empty-text { font-size: 13px; color: #888888; line-height: 1.5; margin-bottom: 20px; }
-  .empty-btn { background-color: #87CEEB; color: #1a1a2e; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 13px; cursor: pointer; }
-
-  .poll-card { background-color: #16213e; width: 100%; border-radius: 15px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); border: 1px solid #2a2a4a; box-sizing: border-box; margin-bottom: 20px; }
-  .poll-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; }
-  .username { font-weight: bold; color: #e94560; }
-  .timestamp { color: #888888; }
-  .poll-question { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-  .poll-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-  .option-btn { width: 100%; padding: 15px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px; color: #ffffff; font-size: 15px; text-align: left; cursor: pointer; position: relative; overflow: hidden; z-index: 1; }
-  .option-btn:hover { border-color: #e94560; }
-  .progress-bar { position: absolute; left: 0; top: 0; height: 100%; background-color: #e94560; opacity: 0.3; z-index: -1; transition: width 0.5s ease; }
-  .percentage-text { float: right; font-weight: bold; color: #e94560; }
-
-  .image-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-  .image-options.three-cols { grid-template-columns: repeat(3, 1fr); }
-  .image-option { position: relative; background-color: #1a1a2e; border: 2px solid #2a2a4a; border-radius: 12px; overflow: hidden; cursor: pointer; aspect-ratio: 1; }
-  .image-option:hover { border-color: #e94560; }
-  .image-option.voted { border-color: #e94560; }
-  .image-option img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .image-option .option-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.95)); padding: 30px 8px 10px 8px; font-size: 12px; font-weight: bold; text-align: center; color: white; }
-  .image-option .pct-overlay { position: absolute; top: 8px; right: 8px; background-color: #e94560; color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
-
-  .poll-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #2a2a4a; }
-  .vote-count { font-size: 13px; color: #888888; }
-  .chat-btn { background-color: transparent; border: 1px solid #e94560; color: #e94560; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
-  .voters-list { font-size: 12px; color: #87CEEB; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #2a2a4a; }
-  .privacy-badge { display: inline-block; font-size: 10px; padding: 3px 8px; background-color: #2a2a4a; color: #87CEEB; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
-  .privacy-badge.private { background-color: #3a1e3e; color: #e94560; }
-  .image-badge { display: inline-block; font-size: 10px; padding: 3px 8px; background-color: #1e3a2e; color: #4ade80; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
-
-  .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background-color: #16213e; border-top: 1px solid #2a2a4a; display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: 10px; }
-  .nav-item { background: none; border: none; color: #888888; font-size: 22px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; }
-  .nav-item span { font-size: 10px; font-weight: bold; }
-  .nav-item.active { color: #87CEEB; }
-  .nav-item.create-nav-btn { color: #1a1a2e; background-color: #87CEEB; border-radius: 50%; width: 50px; height: 50px; justify-content: center; margin-bottom: 10px; }
-
-  .overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a2e; display: none; flex-direction: column; z-index: 100; }
-  .overlay-screen.active { display: flex; }
-  .overlay-header { background-color: #16213e; padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #2a2a4a; }
-  .back-btn { background: none; border: none; color: #e94560; font-size: 20px; cursor: pointer; padding: 0; }
-  .overlay-title { font-weight: bold; font-size: 16px; }
-
-  .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-  .message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
-  .message.own { align-self: flex-end; background-color: #87CEEB; color: #1a1a2e; border-bottom-right-radius: 5px; }
-  .message.other { align-self: flex-start; background-color: #2a2a4a; color: #ffffff; border-bottom-left-radius: 5px; }
-  .chat-input-area { background-color: #16213e; padding: 15px 20px; display: flex; gap: 10px; border-top: 1px solid #2a2a4a; }
-  .chat-input-area input { flex: 1; padding: 12px 15px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 25px; color: white; outline: none; }
-  .send-btn { background-color: #87CEEB; color: #1a1a2e; border: none; border-radius: 25px; padding: 0 20px; font-weight: bold; cursor: pointer; }
-
-  .profile-content { padding: 30px 20px; flex: 1; overflow-y: auto; }
-  .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
-  .avatar { width: 90px; height: 90px; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 42px; margin-bottom: 15px; }
-  .profile-name { font-size: 22px; font-weight: bold; margin: 0 0 5px 0; }
-  .profile-handle { color: #888888; font-size: 14px; margin: 0; }
-  .profile-bio { color: #cccccc; font-size: 13px; text-align: center; margin: 10px 20px 0 20px; line-height: 1.4; }
-
-  .level-bar-container { width: 100%; background-color: #16213e; border-radius: 15px; padding: 15px; border: 1px solid #2a2a4a; margin-bottom: 20px; margin-top: 20px; }
-  .level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
-  .level-title { color: #87CEEB; font-weight: bold; }
-  .xp-text { color: #888888; font-size: 12px; }
-  .xp-track { width: 100%; height: 8px; background-color: #1a1a2e; border-radius: 10px; overflow: hidden; }
-  .xp-fill { height: 100%; background: linear-gradient(90deg, #87CEEB, #e94560); transition: width 0.5s ease; border-radius: 10px; }
-
-  .stats-row { display: flex; justify-content: space-around; background-color: #16213e; padding: 15px; border-radius: 15px; border: 1px solid #2a2a4a; margin-bottom: 30px; }
-  .stat-box { text-align: center; }
-  .stat-box strong { display: block; font-size: 18px; }
-  .stat-box span { font-size: 12px; color: #888888; }
-  .section-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #87CEEB; }
-
-  .create-content { padding: 20px; flex: 1; overflow-y: auto; }
-  .form-group { margin-bottom: 20px; }
-  .form-group label { display: block; font-size: 14px; color: #888888; margin-bottom: 8px; }
-  .form-group input, .form-group select { width: 100%; padding: 15px; background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 10px; color: white; font-size: 15px; box-sizing: border-box; outline: none; }
-  .form-group input:focus, .form-group select:focus { border-color: #87CEEB; }
-
-  .option-input-group { background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
-  .option-input-group .opt-label { font-size: 12px; color: #87CEEB; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-  .remove-opt-btn { background-color: transparent; border: none; color: #e94560; font-size: 16px; cursor: pointer; padding: 0; }
-  .image-picker { width: 100%; height: 120px; background-color: #1a1a2e; border: 2px dashed #2a2a4a; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; }
-  .image-picker.has-image { border-style: solid; border-color: #87CEEB; }
-  .image-picker img { width: 100%; height: 100%; object-fit: cover; }
-  .picker-placeholder { color: #888888; font-size: 12px; text-align: center; padding: 10px; }
-  .picker-remove { position: absolute; top: 6px; right: 6px; background-color: rgba(233,69,96,0.9); color: white; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px; font-weight: bold; display: none; align-items: center; justify-content: center; z-index: 5; }
-  .image-picker.has-image .picker-remove { display: flex; }
-  .url-input { font-size: 11px !important; padding: 10px !important; }
-
-  .add-option-btn { width: 100%; padding: 15px; background-color: transparent; border: 2px dashed #2a2a4a; border-radius: 12px; color: #87CEEB; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
-  .add-option-btn:hover { border-color: #87CEEB; background-color: #16213e; }
-
-  .visibility-row { display: flex; gap: 10px; margin-bottom: 15px; }
-  .visibility-btn { flex: 1; padding: 15px 10px; background-color: #16213e; border: 2px solid #2a2a4a; border-radius: 12px; color: #888888; cursor: pointer; text-align: center; }
-  .visibility-btn.active { border-color: #87CEEB; color: #ffffff; background-color: #1a1a2e; }
-  .visibility-btn .v-icon { font-size: 22px; display: block; margin-bottom: 5px; }
-  .visibility-btn .v-label { font-size: 13px; font-weight: bold; display: block; }
-  .visibility-btn .v-desc { font-size: 10px; color: #888888; display: block; margin-top: 3px; }
-
-  .setting-row { display: flex; justify-content: space-between; align-items: center; background-color: #16213e; padding: 15px; border-radius: 12px; border: 1px solid #2a2a4a; margin-bottom: 12px; }
-  .setting-info { flex: 1; }
-  .setting-label { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
-  .setting-desc { font-size: 11px; color: #888888; }
-  .toggle-btn { background-color: #2a2a4a; color: #888888; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; min-width: 60px; }
-  .toggle-btn.on { background-color: #87CEEB; color: #1a1a2e; }
-
-  .post-btn { width: 100%; padding: 15px; background-color: #87CEEB; color: #1a1a2e; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
-  .danger-btn { width: 100%; padding: 15px; background-color: transparent; color: #e94560; border: 1px solid #e94560; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; }
-
-  .search-bar { width: 100%; padding: 15px; background-color: #16213e; border: 1px solid #2a2a4a; border-radius: 25px; color: white; font-size: 14px; box-sizing: border-box; outline: none; margin-bottom: 20px; }
-  .chips-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
-  .chips-container::-webkit-scrollbar { display: none; }
-  .chip { background-color: #16213e; border: 1px solid #2a2a4a; color: #888888; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-  .chip.active, .chip:hover { background-color: #87CEEB; color: #1a1a2e; border-color: #87CEEB; }
-
-  .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 150; display: none; }
-  .drawer-overlay.open { display: block; }
-  .drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background-color: #16213e; z-index: 200; transition: left 0.3s ease; padding: 20px; box-sizing: border-box; overflow-y: auto; border-right: 1px solid #2a2a4a; }
-  .drawer.open { left: 0; }
-  .drawer-header { display: flex; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid #2a2a4a; margin-bottom: 20px; }
-  .drawer-avatar { width: 50px; height: 50px; background-color: #87CEEB; color: #1a1a2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; }
-  .drawer-name { font-weight: bold; font-size: 15px; }
-  .drawer-handle { font-size: 12px; color: #888888; }
-  .drawer-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; cursor: pointer; font-size: 14px; margin-bottom: 5px; }
-  .drawer-item:hover { background-color: #1a1a2e; }
-  .drawer-item.danger { color: #e94560; }
-  .drawer-divider { height: 1px; background-color: #2a2a4a; margin: 15px 0; }
-
-  .save-flash { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background-color: #87CEEB; color: #1a1a2e; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 999; pointer-events: none; }
-  .save-flash.show { opacity: 1; }
-  .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 900; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 15px; }
-  .loading-overlay.show { display: flex; }
-  .spinner { width: 40px; height: 40px; border: 4px solid #2a2a4a; border-top-color: #87CEEB; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* SHARE MODAL */
+.share-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
+.share-modal-overlay.open { display: flex; }
+.share-modal { background-color: #16213e; width: 100%; max-width: 400px; border-radius: 20px 20px 0 0; padding: 25px 20px 30px; box-sizing: border-box; border-top: 1px solid #2a2a4a; animation: slideUp 0.25s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.share-modal-handle { width: 40px; height: 4px; background-color: #2a2a4a; border-radius: 3px; margin: 0 auto 20px auto; }
+.share-modal-title { font-size: 16px; font-weight: bold; margin-bottom: 20px; text-align: center; }
+.share-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.share-option { display: flex; flex-direction: column; align-items: center; gap: 6px; background-color: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 12px; padding: 14px 5px; cursor: pointer; transition: all 0.2s; }
+.share-option:hover { border-color: #87CEEB; background-color: #2a2a4a; }
+.share-option-icon { font-size: 24px; }
+.share-option-label { font-size: 10px; font-weight: bold; color: #cccccc; }
+.share-tip { font-size: 11px; color: #888888; text-align: center; margin-bottom: 15px; line-height: 1.4; background-color: #1a1a2e; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a2a4a; }
+.share-cancel-btn { width: 100%; padding: 14px; background-color: transparent; border: 1px solid #2a2a4a; color: #888888; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -186,7 +192,35 @@
 <div class="save-flash" id="saveFlash">💾 Saved</div>
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <div style="font-size: 13px; color: #87CEEB; font-weight: bold;">Compressing image...</div>
+  <div style="font-size: 13px; color: #87CEEB; font-weight: bold;" id="loadingText">Loading...</div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="share-modal-overlay" id="shareModalOverlay" onclick="closeShareModal()">
+  <div class="share-modal" onclick="event.stopPropagation()">
+    <div class="share-modal-handle"></div>
+    <div class="share-modal-title">Share this poll 🔗</div>
+    <div class="share-options">
+      <div class="share-option" onclick="shareVia('copy')">
+        <div class="share-option-icon">📋</div>
+        <div class="share-option-label">Copy</div>
+      </div>
+      <div class="share-option" onclick="shareVia('whatsapp')">
+        <div class="share-option-icon">💬</div>
+        <div class="share-option-label">WhatsApp</div>
+      </div>
+      <div class="share-option" onclick="shareVia('twitter')">
+        <div class="share-option-icon">🐦</div>
+        <div class="share-option-label">Twitter</div>
+      </div>
+      <div class="share-option" onclick="shareVia('native')">
+        <div class="share-option-icon">📱</div>
+        <div class="share-option-label">More</div>
+      </div>
+    </div>
+    <div class="share-tip">💡 Copy the link and paste it in any VoxPop chat to share it with friends.</div>
+    <button class="share-cancel-btn" onclick="closeShareModal()">Cancel</button>
+  </div>
 </div>
 
 <!-- AUTH -->
@@ -198,14 +232,14 @@
     <button class="auth-tab" id="signupTab" onclick="switchAuth('signup')">Sign Up</button>
   </div>
   <div class="auth-form" id="loginForm">
-    <label>Email or Username</label>
-    <input type="text" id="loginUsername" placeholder="yourname or you@example.com">
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="you@example.com">
     <label>Password</label>
     <div class="password-wrapper">
       <input type="password" id="loginPassword" placeholder="••••••••">
       <span class="toggle-password" onclick="togglePwd('loginPassword', this)">👁️</span>
     </div>
-    <button class="auth-btn" onclick="handleLogin()">Login</button>
+    <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Login</button>
   </div>
   <div class="auth-form hidden" id="signupForm">
     <div class="avatar-section">
@@ -226,13 +260,12 @@
     </div>
     <label>Bio (Optional)</label>
     <input type="text" id="signupBio" placeholder="e.g. Student · Voter · Debater">
-    <button class="auth-btn" onclick="handleSignup()">Create Account</button>
+    <button class="auth-btn" id="signupBtn" onclick="handleSignup()">Create Account</button>
   </div>
 </div>
 
 <!-- APP -->
 <div class="app-screen" id="appScreen">
-
   <div class="feed-screen" id="feedScreen">
     <div class="feed-top-bar">
       <button class="menu-btn" onclick="openDrawer()">☰</button>
@@ -277,6 +310,7 @@
         <h2 class="profile-name" id="profileNameDisplay">User</h2>
         <p class="profile-handle" id="profileHandleDisplay">@user</p>
         <p class="profile-bio" id="profileBioDisplay">Just joined VoxPop 🚀</p>
+        <p class="profile-joined" id="profileJoinedDisplay">Joined today</p>
       </div>
       <div class="level-bar-container">
         <div class="level-header">
@@ -307,23 +341,22 @@
       </div>
       <div id="optionsContainer"></div>
       <button class="add-option-btn" id="addOptionBtn" onclick="addOptionField()">➕ Add another option</button>
-
       <div class="form-group">
         <label>Who can see this?</label>
         <div class="visibility-row">
-          <div class="visibility-btn active" id="visPrivate" onclick="setVisibility('private')">
-            <span class="v-icon">🔒</span>
-            <span class="v-label">Private</span>
-            <span class="v-desc">Only your circle</span>
-          </div>
-          <div class="visibility-btn" id="visPublic" onclick="setVisibility('public')">
+          <div class="visibility-btn active" id="visPublic" onclick="setVisibility('public')">
             <span class="v-icon">🌐</span>
             <span class="v-label">Public</span>
             <span class="v-desc">Everyone on Explore</span>
           </div>
+          <div class="visibility-btn" id="visPrivate" onclick="setVisibility('private')">
+            <span class="v-icon">🔒</span>
+            <span class="v-label">Private</span>
+            <span class="v-desc">Only on your Home</span>
+          </div>
         </div>
+        <div class="visibility-hint" id="visibilityHint">🌐 Public polls appear on Explore so anyone can vote.</div>
       </div>
-
       <div class="form-group">
         <label>Category</label>
         <select id="newCategory">
@@ -334,7 +367,6 @@
           <option value="elections">🗳️ Elections</option>
         </select>
       </div>
-
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Anonymous Voting</div><div class="setting-desc">Hide who voted for what</div></div>
         <button class="toggle-btn" id="anonToggle" onclick="toggleSetting('anonToggle')">OFF</button>
@@ -343,7 +375,7 @@
         <div class="setting-info"><div class="setting-label">Show Voters</div><div class="setting-desc">Display names of people who voted</div></div>
         <button class="toggle-btn on" id="votersToggle" onclick="toggleSetting('votersToggle')">ON</button>
       </div>
-      <button class="post-btn" onclick="submitPoll()">Post Poll</button>
+      <button class="post-btn" id="postPollBtn" onclick="submitPoll()">Post Poll</button>
     </div>
   </div>
 
@@ -360,7 +392,6 @@
       </div>
       <div class="form-group"><label>Display Name</label><input type="text" id="settingsName"></div>
       <div class="form-group"><label>Username</label><input type="text" id="settingsUsername"></div>
-      <div class="form-group"><label>Email</label><input type="email" id="settingsEmail"></div>
       <div class="form-group"><label>Bio</label><input type="text" id="settingsBio"></div>
       <button class="post-btn" onclick="saveAccountSettings()">Save Changes</button>
     </div>
@@ -376,8 +407,106 @@
       <div class="setting-row"><div class="setting-info"><div class="setting-label">Dark Mode</div><div class="setting-desc">Easier on the eyes at night</div></div><button class="toggle-btn on" id="darkToggle" onclick="toggleSetting('darkToggle')">ON</button></div>
       <div class="setting-row"><div class="setting-info"><div class="setting-label">Private Account</div><div class="setting-desc">Only your circle can see your polls</div></div><button class="toggle-btn" id="privateToggle" onclick="toggleSetting('privateToggle')">OFF</button></div>
       <div class="section-title" style="margin-top: 30px;">🧪 Developer Tools</div>
-      <button class="danger-btn" onclick="clearAllData()">🗑️ Clear All My Data</button>
       <button class="danger-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="overlay-screen" id="aboutScreen">
+    <div class="overlay-header">
+      <button class="back-btn" onclick="closeAbout()">←</button>
+      <div class="overlay-title">About VoxPop ℹ️</div>
+    </div>
+    <div class="create-content">
+      <div style="text-align:center; margin-bottom: 25px;">
+        <div style="font-size: 50px; margin-bottom: 10px;">🗳️</div>
+        <div style="font-size: 26px; font-weight: bold; color: #87CEEB; letter-spacing: 0.5px;">VoxPop</div>
+        <div style="font-size: 11px; color: #888888; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;">Voice of the People</div>
+        <div style="font-size: 11px; color: #555555; margin-top: 10px;">Version 1.0.0</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">📖 What is VoxPop?</div>
+        <div class="faq-a">VoxPop is a social polling app that gives everyone a stage to be heard. Create polls about anything, vote on what matters, and chat with others who care about the same things.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🎯 Why VoxPop?</div>
+        <div class="faq-a">Because decisions should be fun, fast, and inclusive. Whether it's a friendly debate, a community vote, or just figuring out where to eat — VoxPop makes every voice count.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">✨ What's inside?</div>
+        <div class="faq-a">
+          🌐 Public & Private Polls<br>
+          🖼️ Image-based voting<br>
+          💬 Real-time chats on every poll<br>
+          ⭐ XP & Level system<br>
+          🔒 Anonymous voting option<br>
+          🔗 Easy sharing to any app
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">❤️ Who is it for?</div>
+        <div class="faq-a">Built for curious minds everywhere — students, friends, communities, and anyone who wants to know what people really think.</div>
+      </div>
+      <div style="text-align:center; margin-top: 30px; color: #555555; font-size: 12px; padding-bottom: 20px;">Made with ❤️ for people who love to be heard</div>
+    </div>
+  </div>
+
+  <div class="overlay-screen" id="helpSupportScreen">
+    <div class="overlay-header">
+      <button class="back-btn" onclick="closeHelpSupport()">←</button>
+      <div class="overlay-title">Help & Support ❓</div>
+    </div>
+    <div class="create-content">
+      <div class="faq-item">
+        <div class="faq-q">📝 How do I create a poll?</div>
+        <div class="faq-a">Tap the yellow ➕ button at the bottom. Type your question, add 2-6 options, then tap "Post Poll".</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🔒 What's Private vs Public?</div>
+        <div class="faq-a"><strong>Public</strong> polls appear on Explore where anyone can vote.<br><strong>Private</strong> polls only show on your Home — like your own personal opinion board.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">⭐ How do I earn XP?</div>
+        <div class="faq-a">+5 XP for voting on a new poll, +2 XP for every chat message, +20 XP for creating a poll. Level up to unlock titles!</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">👀 Why can't I see my friend's poll?</div>
+        <div class="faq-a">If they made it <strong>Private</strong>, only they can see it. Ask them to make it <strong>Public</strong> so it shows up on Explore for everyone.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🖼️ How do I add images to polls?</div>
+        <div class="faq-a">When creating a poll, tap the image box under any option. You can upload from your phone or paste an image link.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🔗 How do I share a poll?</div>
+        <div class="faq-a">On any poll card, tap the blue 🔗 Share button. Choose WhatsApp, Twitter, or Copy the link to paste anywhere — including VoxPop chats!</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">🚪 How do I log out?</div>
+        <div class="faq-a">Open the menu ☰ (top left) and tap "Logout" at the bottom. Or go to App Settings → Logout.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-screen" id="feedbackScreen">
+    <div class="overlay-header">
+      <button class="back-btn" onclick="closeFeedback()">←</button>
+      <div class="overlay-title">Send Feedback 💡</div>
+    </div>
+    <div class="create-content">
+      <p style="color: #888888; font-size: 13px; margin-top: 0;">Found a bug? Have an idea? Want a new feature? Tell us — we read everything.</p>
+      <div class="form-group">
+        <label>Your Message</label>
+        <textarea id="feedbackText" placeholder="I think VoxPop should..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="feedbackType">
+          <option value="bug">🐛 Bug Report</option>
+          <option value="idea">💡 Feature Idea</option>
+          <option value="other">💬 Just Saying Hi</option>
+        </select>
+      </div>
+      <button class="post-btn" id="feedbackBtn" onclick="submitFeedback()">Send Feedback</button>
     </div>
   </div>
 
@@ -388,7 +517,7 @@
     </div>
     <div class="create-content">
       <div style="text-align:center; margin-bottom: 20px;"><div style="font-size: 13px; color: #888888;">The public square — everyone can see & vote</div></div>
-      <input type="text" class="search-bar" placeholder="🔍 Search polls, topics, or people...">
+      <input type="text" class="search-bar" id="searchBar" placeholder="🔍 Search polls...">
       <div class="chips-container">
         <button class="chip active" onclick="filterPolls('all', this)">🔥 Trending</button>
         <button class="chip" onclick="filterPolls('academics', this)">📚 Academics</button>
@@ -429,196 +558,244 @@
     <div class="drawer-item" onclick="openAppSettings()"><span>⚙️</span> App Settings</div>
     <div class="drawer-item" onclick="openNotifs()"><span>🔔</span> Notifications</div>
     <div class="drawer-divider"></div>
+    <div class="drawer-item" onclick="openAbout()"><span>ℹ️</span> About VoxPop</div>
+    <div class="drawer-item" onclick="openHelpSupport()"><span>❓</span> Help & Support</div>
+    <div class="drawer-item" onclick="openFeedback()"><span>💡</span> Send Feedback</div>
+    <div class="drawer-divider"></div>
     <div class="drawer-item danger" onclick="logout()"><span>🚪</span> Logout</div>
   </div>
-
 </div>
 
 <script>
-// ========== STORAGE ==========
-const POLLS_KEY = "voxpopPolls_v1";
-const USER_KEY = "voxpopUser_v1";
-
-let polls = [];
-try {
-  let s = localStorage.getItem(POLLS_KEY);
-  if (s) {
-    polls = JSON.parse(s);
-    polls.forEach(function(p) {
-      if (p.options && typeof p.options[0] === "string") {
-        p.options = p.options.map(function(o) { return { text: o, image: "" }; });
-      }
-      if (p.votes.length < p.options.length) {
-        while (p.votes.length < p.options.length) p.votes.push(0);
-      }
-    });
-  }
-} catch (e) { polls = []; }
+const firebaseConfig = {
+  apiKey: "AIzaSyD6nF-6PRO-TZOVrsIGBxRXGeFGVKfLkmQ",
+  authDomain: "voxpop-1c6c4.firebaseapp.com",
+  projectId: "voxpop-1c6c4",
+  storageBucket: "voxpop-1c6c4.firebasestorage.app",
+  messagingSenderId: "839233642124",
+  appId: "1:839233642124:web:c7dd76816a808fc2e6e5a9"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const FieldValue = firebase.firestore.FieldValue;
 
 let currentUser = null;
-try {
-  let s = localStorage.getItem(USER_KEY);
-  if (s) currentUser = JSON.parse(s);
-} catch (e) { currentUser = null; }
+let currentUserProfile = null;
+let polls = [];
+let activeChatPollId = null;
+let currentCategoryFilter = "all";
+let newPollVisibility = "public";
+let unsubPolls = null;
+let unsubChat = null;
+let shareModalPollId = null;
 
-// ========== XP / LEVELS ==========
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    showLoading("Loading your profile...");
+    try {
+      const docRef = db.collection('users').doc(user.uid);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        currentUserProfile = docSnap.data();
+      } else {
+        currentUserProfile = {
+          name: user.email.split('@')[0],
+          username: user.email.split('@')[0].toLowerCase(),
+          email: user.email,
+          bio: "Just joined VoxPop 🚀",
+          avatar: "🦊",
+          xp: 10,
+          joinedAt: Date.now()
+        };
+        await docRef.set(currentUserProfile);
+      }
+      hideLoading();
+      enterApp();
+    } catch (e) {
+      hideLoading();
+      console.error(e);
+      alert("Error loading profile: " + e.message);
+    }
+  } else {
+    currentUser = null;
+    currentUserProfile = null;
+    if (unsubPolls) { unsubPolls(); unsubPolls = null; }
+    document.getElementById('appScreen').classList.remove('active');
+    document.getElementById('authScreen').classList.remove('hidden');
+  }
+});
+
+function startPollsListener() {
+  if (unsubPolls) unsubPolls();
+  unsubPolls = db.collection('polls')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot((snapshot) => {
+      polls = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { id: doc.id, ...data, createdAt: data.createdAt ? data.createdAt.toDate().getTime() : Date.now() };
+      });
+      renderHome();
+      renderExplorePolls();
+      renderProfile();
+      updateXPBadge();
+    }, (err) => {
+      console.error("Polls listener error:", err);
+      alert("Database error: " + err.message);
+    });
+}
+
+function formatTime(ms) {
+  const diff = Date.now() - ms;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return mins + "m ago";
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + "h ago";
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return days + "d ago";
+  return Math.floor(days / 7) + "w ago";
+}
+function formatDate(ms) {
+  const d = new Date(ms);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[d.getMonth()] + " " + d.getFullYear();
+}
+
 const LEVELS = [
-  { min: 0, title: "Rookie" },
-  { min: 50, title: "Starter" },
-  { min: 150, title: "Contributor" },
-  { min: 300, title: "Pollster" },
-  { min: 500, title: "Influencer" },
-  { min: 800, title: "Voice of the People" },
+  { min: 0, title: "Rookie" }, { min: 50, title: "Starter" }, { min: 150, title: "Contributor" },
+  { min: 300, title: "Pollster" }, { min: 500, title: "Influencer" }, { min: 800, title: "Voice of the People" },
   { min: 1200, title: "VoxPop Legend" }
 ];
 const XP_PER_LEVEL = [50, 100, 150, 200, 300, 400, 500];
-
 function calculateLevel(xp) {
   let level = 1, remaining = xp;
   for (let i = 0; i < XP_PER_LEVEL.length; i++) {
-    if (remaining >= XP_PER_LEVEL[i]) { remaining -= XP_PER_LEVEL[i]; level++; }
-    else break;
+    if (remaining >= XP_PER_LEVEL[i]) { remaining -= XP_PER_LEVEL[i]; level++; } else break;
   }
   return { level, currentXP: remaining, neededXP: XP_PER_LEVEL[Math.min(level - 1, XP_PER_LEVEL.length - 1)] };
 }
 function getLevelTitle(l) { return LEVELS[Math.min(l - 1, LEVELS.length - 1)].title; }
-
-function awardXP(amount, reason) {
+async function awardXP(amount, reason) {
   if (!currentUser) return;
-  if (!currentUser.xp) currentUser.xp = 0;
-  currentUser.xp += amount;
-  saveUser();
-  updateXPBadge();
-  console.log("🎉 +" + amount + " XP (" + reason + ")");
+  const newXP = (currentUserProfile.xp || 0) + amount;
+  currentUserProfile.xp = newXP;
+  try {
+    await db.collection('users').doc(currentUser.uid).update({ xp: newXP });
+    updateXPBadge();
+  } catch (e) { console.log("XP error:", e); }
 }
 function updateXPBadge() {
-  if (!currentUser) return;
-  let info = calculateLevel(currentUser.xp || 0);
+  if (!currentUserProfile) return;
+  const info = calculateLevel(currentUserProfile.xp || 0);
   document.getElementById('xpBadge').textContent = "⭐ Lv " + info.level;
 }
 
-// ========== AVATARS ==========
 const AVATARS = ["🦊","🐼","🦁","🐯","🐸","🐵","🐶","🐱","🐺","🦄","🐉","👽","🤖","😎","🥳","🧑‍💻","🧑‍🎓","🎮","🎧","🚀"];
 let signupSelectedAvatar = "🦊";
 let settingsSelectedAvatar = "🦊";
-
 function buildAvatarGrid(cid, selected, cb) {
-  let g = document.getElementById(cid); if (!g) return;
+  const g = document.getElementById(cid); if (!g) return;
   g.innerHTML = '';
-  AVATARS.forEach(function(e) {
-    let d = document.createElement('div');
+  AVATARS.forEach(e => {
+    const d = document.createElement('div');
     d.className = 'avatar-option' + (e === selected ? ' selected' : '');
     d.textContent = e;
-    d.onclick = function() { cb(e); };
+    d.onclick = () => cb(e);
     g.appendChild(d);
   });
 }
 function refreshSignupAvatars() {
   document.getElementById('signupAvatarPreview').textContent = signupSelectedAvatar;
-  buildAvatarGrid('signupAvatarGrid', signupSelectedAvatar, function(e) { signupSelectedAvatar = e; refreshSignupAvatars(); });
+  buildAvatarGrid('signupAvatarGrid', signupSelectedAvatar, e => { signupSelectedAvatar = e; refreshSignupAvatars(); });
 }
 function refreshSettingsAvatars() {
   document.getElementById('settingsAvatarPreview').textContent = settingsSelectedAvatar;
-  buildAvatarGrid('settingsAvatarGrid', settingsSelectedAvatar, function(e) { settingsSelectedAvatar = e; refreshSettingsAvatars(); });
+  buildAvatarGrid('settingsAvatarGrid', settingsSelectedAvatar, e => { settingsSelectedAvatar = e; refreshSettingsAvatars(); });
 }
 
-// ========== SAVE ==========
-function savePolls() {
-  try {
-    let d = JSON.stringify(polls);
-    if (d.length > 4 * 1024 * 1024) alert("⚠️ Storage getting full! Delete some image polls.");
-    localStorage.setItem(POLLS_KEY, d);
-    showSaveFlash();
-  } catch (e) { alert("Storage full!"); }
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text || "Loading...";
+  document.getElementById('loadingOverlay').classList.add('show');
 }
-function saveUser() {
-  try { localStorage.setItem(USER_KEY, JSON.stringify(currentUser)); }
-  catch (e) { console.log("Could not save user"); }
-}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
 function showSaveFlash() {
-  let f = document.getElementById('saveFlash');
+  const f = document.getElementById('saveFlash');
   f.classList.add('show');
-  setTimeout(function() { f.classList.remove('show'); }, 800);
+  setTimeout(() => f.classList.remove('show'), 800);
 }
 function togglePwd(id, icon) {
-  let i = document.getElementById(id);
+  const i = document.getElementById(id);
   if (i.type === "password") { i.type = "text"; icon.textContent = "🙈"; }
   else { i.type = "password"; icon.textContent = "👁️"; }
 }
 
-// ========== IMAGE UPLOAD ==========
 function triggerFilePicker(letter) { document.getElementById('file' + letter).click(); }
-
 function handleImageUpload(event, letter) {
-  let file = event.target.files[0];
+  const file = event.target.files[0];
   if (!file) return;
   if (!file.type.startsWith('image/')) { alert("Pick an image file!"); return; }
   if (file.size > 15 * 1024 * 1024) { alert("Image too big (max 15MB)"); return; }
-  document.getElementById('loadingOverlay').classList.add('show');
-
-  let reader = new FileReader();
-  reader.onload = function(e) {
-    let img = new Image();
-    img.onload = function() {
-      let canvas = document.createElement('canvas');
-      let max = 400;
-      let ratio = Math.min(max / img.width, max / img.height, 1);
+  showLoading("Compressing image...");
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 400;
+      const ratio = Math.min(max / img.width, max / img.height, 1);
       canvas.width = Math.round(img.width * ratio);
       canvas.height = Math.round(img.height * ratio);
-      let ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       ctx.fillStyle = "#1a1a2e";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      let compressed = canvas.toDataURL('image/jpeg', 0.7);
+      const compressed = canvas.toDataURL('image/jpeg', 0.5);
       document.getElementById('newUpload' + letter).value = compressed;
-      let picker = document.getElementById('picker' + letter);
+      const picker = document.getElementById('picker' + letter);
       picker.classList.add('has-image');
-      picker.querySelectorAll('img, .picker-placeholder').forEach(function(el) { el.remove(); });
-      let pi = document.createElement('img');
+      picker.querySelectorAll('img, .picker-placeholder').forEach(el => el.remove());
+      const pi = document.createElement('img');
       pi.src = compressed;
       picker.insertBefore(pi, picker.firstChild);
       document.getElementById('newImage' + letter).value = "";
-      document.getElementById('loadingOverlay').classList.remove('show');
+      hideLoading();
     };
-    img.onerror = function() { alert("Could not load image"); document.getElementById('loadingOverlay').classList.remove('show'); };
+    img.onerror = () => { alert("Could not load image"); hideLoading(); };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
   event.target.value = "";
 }
-
 function clearImage(letter) {
   document.getElementById('newUpload' + letter).value = "";
   document.getElementById('newImage' + letter).value = "";
-  let picker = document.getElementById('picker' + letter);
+  const picker = document.getElementById('picker' + letter);
   picker.classList.remove('has-image');
-  picker.querySelectorAll('img').forEach(function(el) { el.remove(); });
+  picker.querySelectorAll('img').forEach(el => el.remove());
   if (!picker.querySelector('.picker-placeholder')) {
-    let ph = document.createElement('div');
-    ph.className = 'picker-placeholder';
-    ph.id = 'placeholder' + letter;
+    const ph = document.createElement('div');
+    ph.className = 'picker-placeholder'; ph.id = 'placeholder' + letter;
     ph.textContent = "📷 Tap to add photo";
     picker.appendChild(ph);
   }
 }
 
-// ========== DYNAMIC OPTIONS ==========
 let optionCount = 0;
 const MAX_OPTIONS = 6;
 const LETTERS = ["A","B","C","D","E","F"];
-
 function addOptionField() {
   if (optionCount >= MAX_OPTIONS) { alert("Maximum " + MAX_OPTIONS + " options"); return; }
-  let letter = LETTERS[optionCount];
+  const letter = LETTERS[optionCount];
   optionCount++;
-  let container = document.getElementById('optionsContainer');
-  let isRequired = optionCount <= 2;
-  let group = document.createElement('div');
+  const container = document.getElementById('optionsContainer');
+  const isRequired = optionCount <= 2;
+  const group = document.createElement('div');
   group.className = 'option-input-group';
   group.id = 'optGroup' + letter;
   group.innerHTML =
-    '<div class="opt-label">' +
-      'Option ' + letter + (isRequired ? '' : ' (optional)') +
+    '<div class="opt-label">Option ' + letter + (isRequired ? '' : ' (optional)') +
       (optionCount > 2 ? '<button class="remove-opt-btn" onclick="removeOptionField(\'' + letter + '\')">✕</button>' : '') +
     '</div>' +
     '<input type="text" id="newOption' + letter + '" placeholder="e.g. Option ' + letter + '" style="margin-bottom:8px;">' +
@@ -632,36 +809,25 @@ function addOptionField() {
   container.appendChild(group);
   updateAddBtn();
 }
-
 function removeOptionField(letter) {
-  let g = document.getElementById('optGroup' + letter);
-  if (g) g.remove();
+  document.getElementById('optGroup' + letter).remove();
   optionCount--;
   updateAddBtn();
 }
-
 function updateAddBtn() {
-  let btn = document.getElementById('addOptionBtn');
+  const btn = document.getElementById('addOptionBtn');
   if (optionCount >= MAX_OPTIONS) {
-    btn.textContent = "Maximum reached";
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
+    btn.textContent = "Maximum reached"; btn.disabled = true; btn.style.opacity = "0.5";
   } else {
-    btn.textContent = "➕ Add another option";
-    btn.disabled = false;
-    btn.style.opacity = "1";
+    btn.textContent = "➕ Add another option"; btn.disabled = false; btn.style.opacity = "1";
   }
 }
-
 function resetOptionFields() {
   document.getElementById('optionsContainer').innerHTML = '';
   optionCount = 0;
-  addOptionField();
-  addOptionField();
-  addOptionField();
+  addOptionField(); addOptionField(); addOptionField();
 }
 
-// ========== AUTH ==========
 function switchAuth(type) {
   if (type === 'login') {
     document.getElementById('loginTab').classList.add('active');
@@ -677,215 +843,229 @@ function switchAuth(type) {
   }
 }
 
-function handleSignup() {
-  let name = document.getElementById('signupName').value.trim();
-  let username = document.getElementById('signupUsername').value.trim();
-  let email = document.getElementById('signupEmail').value.trim();
-  let password = document.getElementById('signupPassword').value.trim();
-  let bio = document.getElementById('signupBio').value.trim();
+async function handleSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const username = document.getElementById('signupUsername').value.trim().toLowerCase().replace('@','');
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value.trim();
+  const bio = document.getElementById('signupBio').value.trim();
   if (!name || !username || !email || !password) { alert("Fill in all required fields!"); return; }
   if (password.length < 6) { alert("Password must be at least 6 characters!"); return; }
-  currentUser = {
-    name, username: username.replace('@', '').toLowerCase(),
-    email, password,
-    bio: bio || "Just joined VoxPop 🚀",
-    avatar: signupSelectedAvatar,
-    xp: 10
-  };
-  saveUser(); enterApp();
+  const btn = document.getElementById('signupBtn');
+  btn.disabled = true; btn.textContent = "Creating account...";
+  showLoading("Creating your account...");
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    const userProfile = {
+      name: name, username: username, email: email,
+      bio: bio || "Just joined VoxPop 🚀",
+      avatar: signupSelectedAvatar, xp: 10,
+      joinedAt: Date.now(),
+      createdAt: FieldValue.serverTimestamp()
+    };
+    await db.collection('users').doc(result.user.uid).set(userProfile);
+    currentUserProfile = userProfile;
+    updateUserUI();
+    hideLoading();
+  } catch (e) {
+    hideLoading();
+    btn.disabled = false; btn.textContent = "Create Account";
+    alert("Signup failed: " + e.message);
+  }
 }
 
-function handleLogin() {
-  let u = document.getElementById('loginUsername').value.trim();
-  let p = document.getElementById('loginPassword').value.trim();
-  if (!u || !p) { alert("Enter username and password!"); return; }
-  let s = localStorage.getItem(USER_KEY);
-  if (s) { currentUser = JSON.parse(s); enterApp(); }
-  else {
-    let handle = u.replace('@', '').split('@')[0].toLowerCase();
-    currentUser = {
-      name: handle.charAt(0).toUpperCase() + handle.slice(1),
-      username: handle,
-      email: u.includes('@') ? u : handle + "@example.com",
-      password: "demo", bio: "Just joined VoxPop 🚀",
-      avatar: "🦊", xp: 10
-    };
-    saveUser(); enterApp();
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!email || !password) { alert("Enter email and password!"); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = "Logging in...";
+  showLoading("Logging in...");
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    hideLoading();
+    btn.disabled = false; btn.textContent = "Login";
+    alert("Login failed: " + e.message);
   }
+}
+
+function logout() {
+  if (confirm("Log out?")) auth.signOut();
 }
 
 function enterApp() {
   document.getElementById('authScreen').classList.add('hidden');
   document.getElementById('appScreen').classList.add('active');
-  updateUserUI(); updateXPBadge(); renderHome(); renderProfile();
+  updateUserUI();
+  updateXPBadge();
+  startPollsListener();
 }
 
 function updateUserUI() {
-  document.getElementById('profileAvatar').textContent = currentUser.avatar;
-  document.getElementById('profileNameDisplay').textContent = currentUser.name;
-  document.getElementById('profileHandleDisplay').textContent = "@" + currentUser.username;
-  document.getElementById('profileBioDisplay').textContent = currentUser.bio;
-  document.getElementById('drawerAvatar').textContent = currentUser.avatar;
-  document.getElementById('drawerName').textContent = currentUser.name;
-  document.getElementById('drawerHandle').textContent = "@" + currentUser.username;
-  document.getElementById('welcomeMsg').textContent = "Welcome back, " + currentUser.name + "!";
-  document.getElementById('settingsName').value = currentUser.name;
-  document.getElementById('settingsUsername').value = "@" + currentUser.username;
-  document.getElementById('settingsEmail').value = currentUser.email;
-  document.getElementById('settingsBio').value = currentUser.bio;
-  settingsSelectedAvatar = currentUser.avatar;
+  if (!currentUserProfile) return;
+  document.getElementById('profileAvatar').textContent = currentUserProfile.avatar;
+  document.getElementById('profileNameDisplay').textContent = currentUserProfile.name;
+  document.getElementById('profileHandleDisplay').textContent = "@" + currentUserProfile.username;
+  document.getElementById('profileBioDisplay').textContent = currentUserProfile.bio;
+  document.getElementById('drawerAvatar').textContent = currentUserProfile.avatar;
+  document.getElementById('drawerName').textContent = currentUserProfile.name;
+  document.getElementById('drawerHandle').textContent = "@" + currentUserProfile.username;
+  document.getElementById('welcomeMsg').textContent = "Welcome back, " + currentUserProfile.name + "!";
+  document.getElementById('settingsName').value = currentUserProfile.name;
+  document.getElementById('settingsUsername').value = "@" + currentUserProfile.username;
+  document.getElementById('settingsBio').value = currentUserProfile.bio;
+  if (currentUserProfile.joinedAt) {
+    document.getElementById('profileJoinedDisplay').textContent = "📅 Joined " + formatDate(currentUserProfile.joinedAt);
+  }
+  settingsSelectedAvatar = currentUserProfile.avatar;
   refreshSettingsAvatars();
 }
 
-function saveAccountSettings() {
-  currentUser.name = document.getElementById('settingsName').value.trim() || currentUser.name;
-  currentUser.username = document.getElementById('settingsUsername').value.replace('@', '').trim() || currentUser.username;
-  currentUser.email = document.getElementById('settingsEmail').value.trim() || currentUser.email;
-  currentUser.bio = document.getElementById('settingsBio').value.trim() || currentUser.bio;
-  currentUser.avatar = settingsSelectedAvatar;
-  saveUser(); updateUserUI();
-  alert("✅ Profile updated!");
-  closeAccountSettings();
+async function saveAccountSettings() {
+  const updates = {
+    name: document.getElementById('settingsName').value.trim() || currentUserProfile.name,
+    username: document.getElementById('settingsUsername').value.replace('@','').trim() || currentUserProfile.username,
+    bio: document.getElementById('settingsBio').value.trim() || currentUserProfile.bio,
+    avatar: settingsSelectedAvatar
+  };
+  try {
+    await db.collection('users').doc(currentUser.uid).update(updates);
+    Object.assign(currentUserProfile, updates);
+    updateUserUI();
+    alert("✅ Profile updated!");
+    closeAccountSettings();
+  } catch (e) { alert("Could not save: " + e.message); }
 }
 
-function logout() {
-  if (confirm("Log out? Your polls stay saved.")) {
-    localStorage.removeItem(USER_KEY);
-    currentUser = null;
-    document.getElementById('appScreen').classList.remove('active');
-    document.getElementById('authScreen').classList.remove('hidden');
-    document.getElementById('loginUsername').value = "";
-    document.getElementById('loginPassword').value = "";
-  }
-}
-
-function clearAllData() {
-  if (confirm("Delete ALL polls, votes, messages?")) {
-    localStorage.removeItem(POLLS_KEY);
-    polls = [];
-    renderHome(); renderProfile(); renderExplorePolls();
-    alert("✅ Cleared");
-  }
-}
-
-// ========== APP LOGIC ==========
-let activeChatPollId = null;
-let currentCategoryFilter = "all";
-let newPollVisibility = "private";
-
-function pollHasImages(p) { return p.options.some(function(o) { return o.image && o.image.trim() !== ""; }); }
+function pollHasImages(p) { return p.options && p.options.some(o => o.image && o.image.trim() !== ""); }
 
 function buildPollCardHTML(poll) {
-  let total = poll.votes.reduce(function(a, b) { return a + b; }, 0);
-  let hasImages = pollHasImages(poll);
+  const total = poll.votes ? poll.votes.reduce((a,b) => a+b, 0) : 0;
+  const hasImages = pollHasImages(poll);
+  const myVote = poll.voters ? poll.voters[currentUser.uid] : undefined;
+  const hasVoted = myVote !== undefined;
   let optionsHTML = '';
-
   if (hasImages) {
-    let cols = poll.options.length <= 2 ? 'image-options' : 'image-options three-cols';
+    const cols = poll.options.length <= 2 ? 'image-options' : 'image-options three-cols';
     optionsHTML = '<div class="' + cols + '">';
-    poll.options.forEach(function(opt, i) {
-      let pct = total === 0 ? 0 : Math.round((poll.votes[i] / total) * 100);
-      let show = poll.userVote !== -1;
-      let vc = (poll.userVote === i) ? ' voted' : '';
-      let badge = show ? '<div class="pct-overlay">' + pct + '%</div>' : '';
-      let img = opt.image ? '<img src="' + opt.image + '" onerror="this.style.display=\'none\'">' : '';
-      optionsHTML += '<div class="image-option' + vc + '" onclick="vote(' + poll.id + ',' + i + ')">' + img + badge + '<div class="option-label">' + opt.text + '</div></div>';
+    poll.options.forEach((opt, i) => {
+      const pct = total === 0 ? 0 : Math.round((poll.votes[i] / total) * 100);
+      const vc = (myVote === i) ? ' voted' : '';
+      const badge = hasVoted ? '<div class="pct-overlay">' + pct + '%</div>' : '';
+      const img = opt.image ? '<img src="' + opt.image + '" onerror="this.style.display=\'none\'">' : '';
+      optionsHTML += '<div class="image-option' + vc + '" onclick="vote(\'' + poll.id + '\',' + i + ')">' + img + badge + '<div class="option-label">' + opt.text + '</div></div>';
     });
     optionsHTML += '</div>';
   } else {
     optionsHTML = '<div class="poll-options">';
-    poll.options.forEach(function(opt, i) {
-      let pct = total === 0 ? 0 : Math.round((poll.votes[i] / total) * 100);
-      let show = poll.userVote !== -1;
-      let bar = show ? '<div class="progress-bar" style="width:' + pct + '%"></div>' : '';
-      let pt = show ? '<span class="percentage-text">' + pct + '%</span>' : '';
-      optionsHTML += '<button class="option-btn" onclick="vote(' + poll.id + ',' + i + ')">' + bar + opt.text + pt + '</button>';
+    poll.options.forEach((opt, i) => {
+      const pct = total === 0 ? 0 : Math.round((poll.votes[i] / total) * 100);
+      const bar = hasVoted ? '<div class="progress-bar" style="width:' + pct + '%"></div>' : '';
+      const pt = hasVoted ? '<span class="percentage-text">' + pct + '%</span>' : '';
+      optionsHTML += '<button class="option-btn" onclick="vote(\'' + poll.id + '\',' + i + ')">' + bar + opt.text + pt + '</button>';
     });
     optionsHTML += '</div>';
   }
-
   let votersHTML = '';
-  if (poll.userVote !== -1 && poll.showVoters && !poll.anonymous && poll.voters.length > 0) {
-    votersHTML = '<div class="voters-list">🗳️ Voted: ' + poll.voters.join(', ') + '</div>';
+  if (hasVoted && poll.showVoters && !poll.anonymous && poll.voters) {
+    const names = Object.values(poll.voters);
+    if (names.length > 0) votersHTML = '<div class="voters-list">🗳️ ' + names.length + ' voted</div>';
   }
-
-  let anonBadge = poll.anonymous ? ' • Anonymous' : '';
-  let pc = poll.visibility === 'private' ? 'private' : '';
-  let pl = poll.visibility === 'private' ? '🔒 Private' : '🌐 Public';
-  let ib = hasImages ? '<span class="image-badge">🖼️ Image Poll</span>' : '';
-
+  const anonBadge = poll.anonymous ? ' • Anonymous' : '';
+  const pc = poll.visibility === 'private' ? 'private' : '';
+  const pl = poll.visibility === 'private' ? '🔒 Private' : '🌐 Public';
+  const ib = hasImages ? '<span class="image-badge">🖼️ Image Poll</span>' : '';
+  const timeAgo = formatTime(poll.createdAt);
   return '<div class="poll-card">' +
-    '<div class="poll-header"><span class="username">' + poll.username + '</span><span class="timestamp">' + poll.timestamp + '</span></div>' +
+    '<div class="poll-header"><span class="username">' + poll.username + '</span><span class="timestamp">' + timeAgo + '</span></div>' +
     '<div class="poll-question">' + poll.question + '<span class="privacy-badge ' + pc + '">' + pl + '</span></div>' +
     optionsHTML +
     '<div class="poll-footer"><span class="vote-count">' + total + ' votes' + anonBadge + ib + '</span>' +
-    '<button class="chat-btn" onclick="openChat(' + poll.id + ')">💬 Open Chat</button></div>' +
-    votersHTML + '</div>';
+    '<div class="poll-actions">' +
+      '<button class="share-btn" onclick="openShareModal(\'' + poll.id + '\')">🔗 Share</button>' +
+      '<button class="chat-btn" onclick="openChat(\'' + poll.id + '\')">💬 Chat</button>' +
+    '</div></div>' + votersHTML + '</div>';
 }
 
 function renderHome() {
   if (!currentUser) return;
-  let f = document.getElementById('pollFeed'); f.innerHTML = '';
-  let pp = polls.filter(function(p) { return p.visibility === 'private'; });
+  const f = document.getElementById('pollFeed'); if (!f) return;
+  f.innerHTML = '';
+  const pp = polls.filter(p => p.visibility === 'private');
   if (pp.length === 0) {
     f.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><div class="empty-title">Your Circle is Quiet</div><div class="empty-text">Start a private poll to vote and chat with your friends.</div><button class="empty-btn" onclick="openCreate()">+ Create Private Poll</button></div>';
     return;
   }
-  pp.forEach(function(p) { f.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
+  pp.forEach(p => { f.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
 }
 
 function renderExplorePolls() {
-  let l = document.getElementById('explorePollList'); if (!l) return;
+  const l = document.getElementById('explorePollList'); if (!l) return;
   l.innerHTML = '';
-  let titles = { all: "Trending Polls", academics: "📚 Academics", campus: "🍔 Campus Life", sports: "🏀 Sports", events: "🎉 Events", elections: "🗳️ Elections" };
+  const titles = { all: "Trending Polls", academics: "📚 Academics", campus: "🍔 Campus Life", sports: "🏀 Sports", events: "🎉 Events", elections: "🗳️ Elections" };
   document.getElementById('exploreTitle').textContent = titles[currentCategoryFilter];
-  let pub = polls.filter(function(p) { return p.visibility === 'public'; });
-  let fil = currentCategoryFilter === "all" ? pub : pub.filter(function(p) { return p.category === currentCategoryFilter; });
+  const pub = polls.filter(p => p.visibility === 'public');
+  const fil = currentCategoryFilter === "all" ? pub : pub.filter(p => p.category === currentCategoryFilter);
   if (fil.length === 0) {
     l.innerHTML = '<div class="empty-state"><div class="empty-icon">🌐</div><div class="empty-title">No Public Polls Yet</div><div class="empty-text">Be the first to post a public poll!</div><button class="empty-btn" onclick="openCreate()">+ Post Public Poll</button></div>';
     return;
   }
-  fil.forEach(function(p) { l.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
+  fil.forEach(p => { l.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
 }
 
-function vote(pollId, optionIndex) {
-  let p = polls.find(function(x) { return x.id === pollId; });
-  if (!p) return;
-  if (p.userVote === optionIndex) return;
-  let isFirst = p.userVote === -1;
-  if (p.userVote !== -1) p.votes[p.userVote]--;
-  else if (p.voters.indexOf(currentUser.username) === -1) p.voters.push(currentUser.username);
-  p.votes[optionIndex]++;
-  p.userVote = optionIndex;
-  savePolls();
-  if (isFirst) awardXP(5, "Voted");
-  renderHome(); renderExplorePolls(); renderProfile();
+async function vote(pollId, optionIndex) {
+  if (!currentUser) return;
+  const pollRef = db.collection('polls').doc(pollId);
+  try {
+    await db.runTransaction(async (tx) => {
+      const doc = await tx.get(pollRef);
+      if (!doc.exists) throw new Error("Poll not found");
+      const data = doc.data();
+      const votes = data.votes ? data.votes.slice() : [];
+      const voters = data.voters ? { ...data.voters } : {};
+      while (votes.length < data.options.length) votes.push(0);
+      const oldIndex = voters[currentUser.uid];
+      const isFirstVote = oldIndex === undefined;
+      if (oldIndex === optionIndex) return;
+      if (oldIndex !== undefined) votes[oldIndex] = Math.max(0, votes[oldIndex] - 1);
+      votes[optionIndex] = (votes[optionIndex] || 0) + 1;
+      voters[currentUser.uid] = optionIndex;
+      tx.update(pollRef, { votes, voters });
+      if (isFirstVote) {
+        const newXP = (currentUserProfile.xp || 0) + 5;
+        const userRef = db.collection('users').doc(currentUser.uid);
+        tx.update(userRef, { xp: newXP });
+      }
+    });
+  } catch (e) {
+    console.error("Vote error:", e);
+    alert("Could not save vote: " + e.message);
+  }
 }
 
 function renderProfile() {
-  if (!currentUser) return;
-  let mp = polls.filter(function(p) { return p.username === "@" + currentUser.username; });
+  if (!currentUserProfile) return;
+  const mp = polls.filter(p => p.authorId === currentUser.uid);
   let tv = 0;
-  mp.forEach(function(p) { tv += p.votes.reduce(function(a, b) { return a + b; }, 0); });
+  mp.forEach(p => { if (p.votes) tv += p.votes.reduce((a,b) => a+b, 0); });
   document.getElementById('statPolls').textContent = mp.length;
   document.getElementById('statVotes').textContent = tv;
   document.getElementById('statFollowers').textContent = mp.length * 3;
-
-  let info = calculateLevel(currentUser.xp || 0);
+  const info = calculateLevel(currentUserProfile.xp || 0);
   document.getElementById('levelTitle').textContent = "Level " + info.level + " · " + getLevelTitle(info.level);
   document.getElementById('xpText').textContent = info.currentXP + " / " + info.neededXP + " XP";
-  let pct = Math.min((info.currentXP / info.neededXP) * 100, 100);
+  const pct = Math.min((info.currentXP / info.neededXP) * 100, 100);
   document.getElementById('xpFill').style.width = pct + "%";
-
-  let l = document.getElementById('myPollsList');
+  const l = document.getElementById('myPollsList');
   if (mp.length === 0) {
     l.innerHTML = '<div style="color:#888; font-size:13px; text-align:center; padding:20px;">You haven\'t created any polls yet.</div>';
     return;
   }
   l.innerHTML = '';
-  mp.forEach(function(p) {
-    let t = p.votes.reduce(function(a, b) { return a + b; }, 0);
-    l.insertAdjacentHTML('beforeend', '<div class="poll-card" style="padding:15px; margin-bottom:10px;" onclick="openChat(' + p.id + ')"><div style="font-size:14px; font-weight:bold;">' + p.question + '</div><div style="font-size:12px; color:#e94560; margin-top:6px;">' + t + ' votes</div></div>');
+  mp.forEach(p => {
+    const t = p.votes ? p.votes.reduce((a,b) => a+b, 0) : 0;
+    l.insertAdjacentHTML('beforeend', '<div class="poll-card" style="padding:15px; margin-bottom:10px;" onclick="openChat(\'' + p.id + '\')"><div style="font-size:14px; font-weight:bold;">' + p.question + '</div><div style="font-size:12px; color:#e94560; margin-top:6px;">' + t + ' votes</div></div>');
   });
 }
 
@@ -893,16 +1073,52 @@ function setVisibility(t) {
   newPollVisibility = t;
   document.getElementById('visPrivate').classList.toggle('active', t === 'private');
   document.getElementById('visPublic').classList.toggle('active', t === 'public');
+  const hint = document.getElementById('visibilityHint');
+  if (t === 'private') {
+    hint.textContent = "🔒 Private polls only show on your Home — only you see them.";
+  } else {
+    hint.textContent = "🌐 Public polls appear on Explore so anyone can vote.";
+  }
 }
 
 function openExplore() { document.getElementById('exploreScreen').classList.add('active'); renderExplorePolls(); }
 function closeExplore() { document.getElementById('exploreScreen').classList.remove('active'); }
 function openProfile() { document.getElementById('profileScreen').classList.add('active'); renderProfile(); }
 function closeProfile() { document.getElementById('profileScreen').classList.remove('active'); }
-function openCreate() { resetOptionFields(); document.getElementById('createScreen').classList.add('active'); }
+function openCreate() { resetOptionFields(); setVisibility('public'); document.getElementById('createScreen').classList.add('active'); }
 function closeCreate() { document.getElementById('createScreen').classList.remove('active'); }
 function openNotifs() { closeDrawer(); document.getElementById('notifsScreen').classList.add('active'); }
 function closeNotifs() { document.getElementById('notifsScreen').classList.remove('active'); }
+function openAbout() { closeDrawer(); document.getElementById('aboutScreen').classList.add('active'); }
+function closeAbout() { document.getElementById('aboutScreen').classList.remove('active'); }
+function openHelpSupport() { closeDrawer(); document.getElementById('helpSupportScreen').classList.add('active'); }
+function closeHelpSupport() { document.getElementById('helpSupportScreen').classList.remove('active'); }
+function openFeedback() { closeDrawer(); document.getElementById('feedbackScreen').classList.add('active'); }
+function closeFeedback() { document.getElementById('feedbackScreen').classList.remove('active'); }
+
+async function submitFeedback() {
+  const text = document.getElementById('feedbackText').value.trim();
+  const type = document.getElementById('feedbackType').value;
+  if (!text) { alert("Please type your feedback first!"); return; }
+  const btn = document.getElementById('feedbackBtn');
+  btn.disabled = true; btn.textContent = "Sending...";
+  try {
+    await db.collection('feedback').add({
+      userId: currentUser.uid,
+      username: currentUserProfile.username,
+      type: type,
+      text: text,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    document.getElementById('feedbackText').value = "";
+    btn.disabled = false; btn.textContent = "Send Feedback";
+    alert("✅ Thank you! Your feedback has been sent.");
+    closeFeedback();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = "Send Feedback";
+    alert("Could not send: " + e.message);
+  }
+}
 
 function openDrawer() {
   document.getElementById('drawer').classList.add('open');
@@ -912,108 +1128,170 @@ function closeDrawer() {
   document.getElementById('drawer').classList.remove('open');
   document.getElementById('drawerOverlay').classList.remove('open');
 }
-function openAccountSettings() { closeDrawer(); settingsSelectedAvatar = currentUser.avatar; refreshSettingsAvatars(); document.getElementById('accountSettingsScreen').classList.add('active'); }
+function openAccountSettings() { closeDrawer(); settingsSelectedAvatar = currentUserProfile.avatar; refreshSettingsAvatars(); document.getElementById('accountSettingsScreen').classList.add('active'); }
 function closeAccountSettings() { document.getElementById('accountSettingsScreen').classList.remove('active'); }
 function openAppSettings() { closeDrawer(); document.getElementById('appSettingsScreen').classList.add('active'); }
 function closeAppSettings() { document.getElementById('appSettingsScreen').classList.remove('active'); }
-
 function toggleSetting(id) {
-  let b = document.getElementById(id);
+  const b = document.getElementById(id);
   if (b.textContent === "ON") { b.textContent = "OFF"; b.classList.remove('on'); }
   else { b.textContent = "ON"; b.classList.add('on'); }
 }
+function filterPolls(cat, chipEl) {
+  currentCategoryFilter = cat;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+  renderExplorePolls();
+}
 
-function openChat(id) {
-  let p = polls.find(function(x) { return x.id === id; });
-  if (!p) return;
-  activeChatPollId = id;
-  document.getElementById('chatTitle').textContent = "💬 " + p.question;
-  let c = document.getElementById('chatMessages');
-  c.innerHTML = '';
-  if (p.messages.length === 0) {
-    c.innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">No messages yet. Say hi! 👋</div>';
-  } else {
-    p.messages.forEach(function(m) {
-      let d = document.createElement('div');
-      d.className = 'message ' + m.sender;
-      d.textContent = m.text;
-      c.appendChild(d);
+// ===== SHARE MODAL =====
+function openShareModal(pollId) {
+  shareModalPollId = pollId;
+  document.getElementById('shareModalOverlay').classList.add('open');
+}
+function closeShareModal() {
+  document.getElementById('shareModalOverlay').classList.remove('open');
+  shareModalPollId = null;
+}
+function getShareData() {
+  const poll = polls.find(p => p.id === shareModalPollId);
+  if (!poll) return null;
+  const url = window.location.origin + window.location.pathname;
+  const text = "🗳️ Vote on this: \"" + poll.question + "\"\n\nJoin VoxPop and cast your vote:\n" + url;
+  return { poll, url, text };
+}
+function shareVia(platform) {
+  const data = getShareData();
+  if (!data) return;
+  if (platform === 'copy') {
+    navigator.clipboard.writeText(data.text).then(() => {
+      alert("✅ Copied! Paste it anywhere — WhatsApp, VoxPop chats, or any app.");
+      closeShareModal();
+    }).catch(() => {
+      prompt("Copy this:", data.text);
+      closeShareModal();
     });
+  } else if (platform === 'whatsapp') {
+    window.open("https://wa.me/?text=" + encodeURIComponent(data.text), "_blank");
+    closeShareModal();
+  } else if (platform === 'twitter') {
+    window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(data.text), "_blank");
+    closeShareModal();
+  } else if (platform === 'native') {
+    if (navigator.share) {
+      navigator.share({ title: "VoxPop Poll", text: data.text }).then(() => closeShareModal()).catch(() => closeShareModal());
+    } else {
+      alert("Sharing not supported on this device. Use Copy instead!");
+    }
   }
-  c.scrollTop = c.scrollHeight;
+}
+
+// ===== CHAT =====
+function openChat(pollId) {
+  const poll = polls.find(x => x.id === pollId);
+  if (!poll) return;
+  activeChatPollId = pollId;
+  document.getElementById('chatTitle').textContent = "💬 " + poll.question;
+  document.getElementById('chatMessages').innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">Loading...</div>';
+  if (unsubChat) { unsubChat(); unsubChat = null; }
+  unsubChat = db.collection('polls').doc(pollId).collection('messages')
+    .orderBy('createdAt', 'asc')
+    .onSnapshot((snap) => {
+      const c = document.getElementById('chatMessages');
+      c.innerHTML = '';
+      if (snap.empty) {
+        c.innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">No messages yet. Say hi! 👋</div>';
+        return;
+      }
+      snap.forEach(doc => {
+        const m = doc.data();
+        const isOwn = m.userId === currentUser.uid;
+        const d = document.createElement('div');
+        d.className = 'message ' + (isOwn ? 'own' : 'other');
+        const sender = isOwn ? '' : '<div class="sender">' + (m.username || 'User') + '</div>';
+        d.innerHTML = sender + escapeHtml(m.text || '');
+        c.appendChild(d);
+      });
+      c.scrollTop = c.scrollHeight;
+    }, (err) => console.error("Chat error:", err));
   document.getElementById('chatScreen').classList.add('active');
 }
-function closeChat() { document.getElementById('chatScreen').classList.remove('active'); activeChatPollId = null; }
-
-function sendMessage() {
-  let input = document.getElementById('messageInput');
-  let text = input.value.trim();
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+function closeChat() {
+  document.getElementById('chatScreen').classList.remove('active');
+  activeChatPollId = null;
+  if (unsubChat) { unsubChat(); unsubChat = null; }
+}
+async function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
   if (!text || activeChatPollId === null) return;
-  let p = polls.find(function(x) { return x.id === activeChatPollId; });
-  p.messages.push({ text: text, sender: 'own' });
-  savePolls();
-  awardXP(2, "Chatted");
-  let c = document.getElementById('chatMessages');
-  let n = document.createElement('div');
-  n.className = 'message own';
-  n.textContent = text;
-  c.appendChild(n);
   input.value = "";
-  c.scrollTop = c.scrollHeight;
+  try {
+    await db.collection('polls').doc(activeChatPollId).collection('messages').add({
+      userId: currentUser.uid,
+      username: "@" + currentUserProfile.username,
+      text: text,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    await awardXP(2, "Chatted");
+  } catch (e) { alert("Could not send: " + e.message); }
 }
 
-function submitPoll() {
-  let q = document.getElementById('newQuestion').value.trim();
+async function submitPoll() {
+  const q = document.getElementById('newQuestion').value.trim();
   if (!q) { alert("Please add a question!"); return; }
-
-  let options = [];
+  const options = [];
   for (let i = 0; i < optionCount; i++) {
-    let letter = LETTERS[i];
-    let el = document.getElementById('newOption' + letter);
+    const letter = LETTERS[i];
+    const el = document.getElementById('newOption' + letter);
     if (!el) continue;
-    let txt = el.value.trim();
+    const txt = el.value.trim();
     if (txt === "") continue;
-    let img = document.getElementById('newUpload' + letter).value || document.getElementById('newImage' + letter).value.trim();
+    const img = document.getElementById('newUpload' + letter).value || document.getElementById('newImage' + letter).value.trim();
     options.push({ text: letter + ". " + txt, image: img });
   }
-
   if (options.length < 2) { alert("Need at least 2 options!"); return; }
-
-  let isAnon = document.getElementById('anonToggle').textContent === "ON";
-  let showV = document.getElementById('votersToggle').textContent === "ON";
-  let cat = document.getElementById('newCategory').value;
-
-  let newPoll = {
-    id: Date.now(),
-    username: "@" + currentUser.username,
-    timestamp: "Just now",
-    question: q,
-    category: cat,
-    visibility: newPollVisibility,
-    options: options,
-    votes: new Array(options.length).fill(0),
-    userVote: -1,
-    anonymous: isAnon,
-    showVoters: showV,
-    voters: [],
-    messages: []
-  };
-
-  polls.unshift(newPoll);
-  savePolls();
-  awardXP(20, "Created a poll");
-  renderHome(); renderExplorePolls(); renderProfile();
-
-  document.getElementById('newQuestion').value = "";
-  resetOptionFields();
-  setVisibility('private');
-  closeCreate();
+  const isAnon = document.getElementById('anonToggle').textContent === "ON";
+  const showV = document.getElementById('votersToggle').textContent === "ON";
+  const cat = document.getElementById('newCategory').value;
+  const btn = document.getElementById('postPollBtn');
+  btn.disabled = true; btn.textContent = "Posting...";
+  showLoading("Posting your poll...");
+  try {
+    await db.collection('polls').add({
+      authorId: currentUser.uid,
+      username: "@" + currentUserProfile.username,
+      avatar: currentUserProfile.avatar,
+      question: q,
+      category: cat,
+      visibility: newPollVisibility,
+      options: options,
+      votes: new Array(options.length).fill(0),
+      voters: {},
+      anonymous: isAnon,
+      showVoters: showV,
+      createdAt: FieldValue.serverTimestamp()
+    });
+    await awardXP(20, "Created poll");
+    document.getElementById('newQuestion').value = "";
+    resetOptionFields();
+    setVisibility('public');
+    hideLoading();
+    btn.disabled = false; btn.textContent = "Post Poll";
+    closeCreate();
+  } catch (e) {
+    hideLoading();
+    btn.disabled = false; btn.textContent = "Post Poll";
+    alert("Could not post poll: " + e.message);
+  }
 }
 
-// ========== BOOT ==========
 refreshSignupAvatars();
-if (currentUser) enterApp();
-else document.getElementById('authScreen').classList.remove('hidden');
 </script>
 
 </body>
