@@ -85,7 +85,7 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .nav-item.active { color: #87CEEB; }
 .nav-item.create-nav-btn { color: #1a1a2e; background-color: #87CEEB; border-radius: 50%; width: 50px; height: 50px; justify-content: center; margin-bottom: 10px; }
 .overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a2e; display: none; flex-direction: column; z-index: 100; }
-.overlay-screen.active { display: flex !important; } /* Fix for chat bug */
+.overlay-screen.active { display: flex !important; }
 .overlay-header { background-color: #16213e; padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #2a2a4a; }
 .back-btn { background: none; border: none; color: #e94560; font-size: 20px; cursor: pointer; padding: 0; }
 .overlay-title { font-weight: bold; font-size: 16px; }
@@ -899,7 +899,6 @@ function buildPollCardHTML(poll) {
     optionsHTML += '</div>';
   }
 
-  // FIX: Show usernames instead of just count
   let votersHTML = '';
   if (hasVoted && poll.showVoters && !poll.anonymous && poll.voters) {
     const names = Object.values(poll.voters).map(v => {
@@ -918,7 +917,6 @@ function buildPollCardHTML(poll) {
   const isOwnPoll = poll.authorId === currentUser.uid;
   const authorClick = isOwnPoll ? 'openProfile()' : 'viewUserProfile(\'' + poll.authorId + '\')';
   
-  // FIX: Add Delete Button
   const deleteBtn = isOwnPoll ? '<button class="delete-btn" onclick="deletePoll(\'' + poll.id + '\')">🗑️</button>' : '';
 
   return '<div class="poll-card">' +
@@ -939,12 +937,10 @@ function buildPollCardHTML(poll) {
     '</div></div>' + votersHTML + '</div>';
 }
 
-// FIX: Delete Poll Function
 async function deletePoll(pollId) {
   if (confirm("Are you sure you want to delete this poll permanently? This cannot be undone.")) {
     try {
       await db.collection('polls').doc(pollId).delete();
-      // The real-time listener will automatically remove it from the UI
     } catch (e) {
       alert("Error deleting: " + e.message);
     }
@@ -955,7 +951,8 @@ function renderHome() {
   if (!currentUser) return;
   const f = document.getElementById('pollFeed'); if (!f) return;
   f.innerHTML = '';
-  const pp = polls.filter(p => p.visibility === 'private');
+  // FIX: Private polls only show if I am the creator
+  const pp = polls.filter(p => p.visibility === 'private' && p.authorId === currentUser.uid);
   if (pp.length === 0) {
     f.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><div class="empty-title">Your Circle is Quiet</div><div class="empty-text">Start a private poll to vote and chat with your friends.</div><button class="empty-btn" onclick="openCreate()">+ Create Private Poll</button></div>';
     return;
@@ -1062,7 +1059,6 @@ async function vote(pollId, optionIndex) {
       
       votes[optionIndex] = (votes[optionIndex] || 0) + 1;
       
-      // FIX: Store username inside voters object
       voters[currentUser.uid] = { choice: optionIndex, name: currentUserProfile.username };
       
       tx.update(pollRef, { votes, voters });
@@ -1182,14 +1178,11 @@ function shareVia(platform) {
   }
 }
 
-// FIX: Chat Bug (Moved classList.add up)
 function openChat(pollId) {
   const poll = polls.find(x => x.id === pollId);
   if (!poll) return;
   activeChatPollId = pollId;
   document.getElementById('chatTitle').textContent = "💬 " + poll.question;
-  
-  // Show screen FIRST so browser renders it immediately
   document.getElementById('chatScreen').classList.add('active'); 
   document.getElementById('chatMessages').innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">Loading...</div>';
   
