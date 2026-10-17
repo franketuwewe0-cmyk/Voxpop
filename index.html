@@ -71,9 +71,10 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .image-option .pct-overlay { position: absolute; top: 8px; right: 8px; background-color: #e94560; color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
 .poll-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #2a2a4a; }
 .vote-count { font-size: 13px; color: #888888; }
-.poll-actions { display: flex; gap: 8px; }
-.chat-btn, .share-btn { background-color: transparent; border: 1px solid #e94560; color: #e94560; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
+.poll-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.chat-btn, .share-btn, .delete-btn { background-color: transparent; border: 1px solid #e94560; color: #e94560; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
 .share-btn { border-color: #87CEEB; color: #87CEEB; }
+.delete-btn { border-color: #ff4444; color: #ff4444; padding: 8px 12px; }
 .voters-list { font-size: 12px; color: #87CEEB; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #2a2a4a; }
 .privacy-badge { display: inline-block; font-size: 10px; padding: 3px 8px; background-color: #2a2a4a; color: #87CEEB; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
 .privacy-badge.private { background-color: #3a1e3e; color: #e94560; }
@@ -84,7 +85,7 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
 .nav-item.active { color: #87CEEB; }
 .nav-item.create-nav-btn { color: #1a1a2e; background-color: #87CEEB; border-radius: 50%; width: 50px; height: 50px; justify-content: center; margin-bottom: 10px; }
 .overlay-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a2e; display: none; flex-direction: column; z-index: 100; }
-.overlay-screen.active { display: flex; }
+.overlay-screen.active { display: flex !important; } /* Fix for chat bug */
 .overlay-header { background-color: #16213e; padding: 15px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #2a2a4a; }
 .back-btn { background: none; border: none; color: #e94560; font-size: 20px; cursor: pointer; padding: 0; }
 .overlay-title { font-weight: bold; font-size: 16px; }
@@ -292,7 +293,6 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
     </div>
   </div>
 
-  <!-- VIEW ANOTHER USER'S PROFILE -->
   <div class="overlay-screen" id="viewProfileScreen">
     <div class="overlay-header">
       <button class="back-btn" onclick="closeViewProfile()">←</button>
@@ -446,11 +446,12 @@ body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Segoe UI'
     </div>
     <div class="create-content">
       <div class="faq-item"><div class="faq-q">📝 How do I create a poll?</div><div class="faq-a">Tap the yellow ➕ button at the bottom. Type your question, add 2-6 options, then tap "Post Poll".</div></div>
-      <div class="faq-item"><div class="faq-q">🔒 What's Private vs Public?</div><div class="faq-a"><strong>Public</strong> polls appear on Explore where anyone can vote.<br><strong>Private</strong> polls only show on your Home — like your own personal opinion board.</div></div>
+      <div class="faq-item"><div class="faq-q">🔒 What's Private vs Public?</div><div class="faq-a"><strong>Public</strong> polls appear on Explore where anyone can vote.<br><strong>Private</strong> polls only show on your Home.</div></div>
       <div class="faq-item"><div class="faq-q">⭐ How do I earn XP?</div><div class="faq-a">+5 XP for voting on a new poll, +2 XP for every chat message, +20 XP for creating a poll. Level up to unlock titles!</div></div>
       <div class="faq-item"><div class="faq-q">👀 How do I see someone's profile?</div><div class="faq-a">Tap any username on a poll card. You'll see their bio, level, and public polls.</div></div>
       <div class="faq-item"><div class="faq-q">🔐 I forgot my password!</div><div class="faq-a">Tap "Forgot password?" on the login screen. Enter your email and we'll send you a reset link.</div></div>
       <div class="faq-item"><div class="faq-q">🔗 How do I share a poll?</div><div class="faq-a">On any poll card, tap the blue 🔗 Share button. Choose WhatsApp, Twitter, or Copy the link to paste anywhere.</div></div>
+      <div class="faq-item"><div class="faq-q">🗑️ Can I delete my poll?</div><div class="faq-a">Yes! On polls you created, tap the red trash can icon next to Share to delete it permanently.</div></div>
       <div class="faq-item"><div class="faq-q">🚪 How do I log out?</div><div class="faq-a">Open the menu ☰ (top left) and tap "Logout" at the bottom.</div></div>
     </div>
   </div>
@@ -675,10 +676,8 @@ async function handleForgotPassword() {
   if (!email) return;
   try {
     await auth.sendPasswordResetEmail(email);
-    alert("✅ Reset link sent to " + email + "\n\nCheck your inbox (and spam folder). Click the link to set a new password.");
-  } catch (e) {
-    alert("Could not send reset email: " + e.message);
-  }
+    alert("✅ Reset link sent to " + email + "\n\nCheck your inbox (and spam folder).");
+  } catch (e) { alert("Could not send reset email: " + e.message); }
 }
 
 function triggerFilePicker(letter) { document.getElementById('file' + letter).click(); }
@@ -883,7 +882,7 @@ function buildPollCardHTML(poll) {
     optionsHTML = '<div class="' + cols + '">';
     poll.options.forEach((opt, i) => {
       const pct = total === 0 ? 0 : Math.round((poll.votes[i] / total) * 100);
-      const vc = (myVote === i) ? ' voted' : '';
+      const vc = (myVote && myVote.choice === i) || (myVote === i) ? ' voted' : '';
       const badge = hasVoted ? '<div class="pct-overlay">' + pct + '%</div>' : '';
       const img = opt.image ? '<img src="' + opt.image + '" onerror="this.style.display=\'none\'">' : '';
       optionsHTML += '<div class="image-option' + vc + '" onclick="vote(\'' + poll.id + '\',' + i + ')">' + img + badge + '<div class="option-label">' + opt.text + '</div></div>';
@@ -899,11 +898,17 @@ function buildPollCardHTML(poll) {
     });
     optionsHTML += '</div>';
   }
+
+  // FIX: Show usernames instead of just count
   let votersHTML = '';
   if (hasVoted && poll.showVoters && !poll.anonymous && poll.voters) {
-    const names = Object.values(poll.voters);
-    if (names.length > 0) votersHTML = '<div class="voters-list">🗳️ ' + names.length + ' voted</div>';
+    const names = Object.values(poll.voters).map(v => {
+      if (typeof v === 'number') return "Someone";
+      return v.name ? "@" + v.name : "Someone";
+    });
+    if (names.length > 0) votersHTML = '<div class="voters-list">🗳️ Voted: ' + names.join(', ') + '</div>';
   }
+
   const anonBadge = poll.anonymous ? ' • Anonymous' : '';
   const pc = poll.visibility === 'private' ? 'private' : '';
   const pl = poll.visibility === 'private' ? '🔒 Private' : '🌐 Public';
@@ -912,6 +917,10 @@ function buildPollCardHTML(poll) {
   const avatar = poll.avatar || '🦊';
   const isOwnPoll = poll.authorId === currentUser.uid;
   const authorClick = isOwnPoll ? 'openProfile()' : 'viewUserProfile(\'' + poll.authorId + '\')';
+  
+  // FIX: Add Delete Button
+  const deleteBtn = isOwnPoll ? '<button class="delete-btn" onclick="deletePoll(\'' + poll.id + '\')">🗑️</button>' : '';
+
   return '<div class="poll-card">' +
     '<div class="poll-header">' +
       '<div class="poll-author" onclick="' + authorClick + '">' +
@@ -924,9 +933,22 @@ function buildPollCardHTML(poll) {
     optionsHTML +
     '<div class="poll-footer"><span class="vote-count">' + total + ' votes' + anonBadge + ib + '</span>' +
     '<div class="poll-actions">' +
+      deleteBtn +
       '<button class="share-btn" onclick="openShareModal(\'' + poll.id + '\')">🔗 Share</button>' +
       '<button class="chat-btn" onclick="openChat(\'' + poll.id + '\')">💬 Chat</button>' +
     '</div></div>' + votersHTML + '</div>';
+}
+
+// FIX: Delete Poll Function
+async function deletePoll(pollId) {
+  if (confirm("Are you sure you want to delete this poll permanently? This cannot be undone.")) {
+    try {
+      await db.collection('polls').doc(pollId).delete();
+      // The real-time listener will automatically remove it from the UI
+    } catch (e) {
+      alert("Error deleting: " + e.message);
+    }
+  }
 }
 
 function renderHome() {
@@ -955,7 +977,6 @@ function renderExplorePolls() {
   fil.forEach(p => { l.insertAdjacentHTML('beforeend', buildPollCardHTML(p)); });
 }
 
-// ===== VIEW USER PROFILE =====
 async function viewUserProfile(uid) {
   if (!uid) return;
   viewingUserId = uid;
@@ -1031,12 +1052,19 @@ async function vote(pollId, optionIndex) {
       const votes = data.votes ? data.votes.slice() : [];
       const voters = data.voters ? { ...data.voters } : {};
       while (votes.length < data.options.length) votes.push(0);
-      const oldIndex = voters[currentUser.uid];
+      
+      const oldVote = voters[currentUser.uid];
+      const oldIndex = oldVote ? (oldVote.choice !== undefined ? oldVote.choice : oldVote) : undefined;
       const isFirstVote = oldIndex === undefined;
+      
       if (oldIndex === optionIndex) return;
       if (oldIndex !== undefined) votes[oldIndex] = Math.max(0, votes[oldIndex] - 1);
+      
       votes[optionIndex] = (votes[optionIndex] || 0) + 1;
-      voters[currentUser.uid] = optionIndex;
+      
+      // FIX: Store username inside voters object
+      voters[currentUser.uid] = { choice: optionIndex, name: currentUserProfile.username };
+      
       tx.update(pollRef, { votes, voters });
       if (isFirstVote) {
         const newXP = (currentUserProfile.xp || 0) + 5;
@@ -1131,7 +1159,6 @@ function filterPolls(cat, chipEl) {
   renderExplorePolls();
 }
 
-// SHARE
 function openShareModal(pollId) { shareModalPollId = pollId; document.getElementById('shareModalOverlay').classList.add('open'); }
 function closeShareModal() { document.getElementById('shareModalOverlay').classList.remove('open'); shareModalPollId = null; }
 function getShareData() {
@@ -1155,13 +1182,17 @@ function shareVia(platform) {
   }
 }
 
-// CHAT
+// FIX: Chat Bug (Moved classList.add up)
 function openChat(pollId) {
   const poll = polls.find(x => x.id === pollId);
   if (!poll) return;
   activeChatPollId = pollId;
   document.getElementById('chatTitle').textContent = "💬 " + poll.question;
+  
+  // Show screen FIRST so browser renders it immediately
+  document.getElementById('chatScreen').classList.add('active'); 
   document.getElementById('chatMessages').innerHTML = '<div style="text-align:center; color:#555; font-size:13px; margin-top: 30px;">Loading...</div>';
+  
   if (unsubChat) { unsubChat(); unsubChat = null; }
   unsubChat = db.collection('polls').doc(pollId).collection('messages').orderBy('createdAt', 'asc')
     .onSnapshot((snap) => {
@@ -1179,7 +1210,6 @@ function openChat(pollId) {
       });
       c.scrollTop = c.scrollHeight;
     }, (err) => console.error("Chat error:", err));
-  document.getElementById('chatScreen').classList.add('active');
 }
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 function closeChat() { document.getElementById('chatScreen').classList.remove('active'); activeChatPollId = null; if (unsubChat) { unsubChat(); unsubChat = null; } }
